@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "app": {
+      "workdir": ".",
+      "build": "go build ./...",
+      "test": "go test ./... {filter}"
+    }
+  },
+  "namespace": "astock_trade",
+  "default": "app"
+}
