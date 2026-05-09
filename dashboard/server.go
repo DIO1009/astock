@@ -208,7 +208,8 @@ func (s *Server) OnQuoteRefresh(equity float64, report core.PerformanceReport, p
 	positionHistory, trades := lastSnap.PositionHistory, lastSnap.Trades
 	safetyInfo, riskInfo := lastSnap.Safety, lastSnap.Risk
 	execution, strategies := lastSnap.Execution, lastSnap.Strategies
-	marketInfo, candidates := lastSnap.Market, lastSnap.Candidates
+	marketInfo := s.buildMarket(quotes)
+	candidates := lastSnap.Candidates
 	if lastSnap.Timestamp == 0 {
 		positionHistory = s.buildPositionHistory()
 		trades = s.buildTrades()
@@ -216,7 +217,6 @@ func (s *Server) OnQuoteRefresh(equity float64, report core.PerformanceReport, p
 		riskInfo = s.buildRisk()
 		execution = s.buildExecution()
 		strategies = s.buildStrategies()
-		marketInfo = s.buildMarket(quotes)
 		candidates = s.buildCandidates(positions, quotes)
 	}
 
@@ -586,7 +586,7 @@ func (s *Server) buildMarket(quotes map[string]*core.Quote) MarketInfo {
 	s.mu.RLock()
 	m := s.lastMarket
 	s.mu.RUnlock()
-	for _, sym := range []string{"000300.SH", "399300.SZ", "CSI300"} {
+	for _, sym := range []string{"000001", "000001.SH", "SH000001", "000300", "000300.SH", "399300", "399300.SZ", "CSI300"} {
 		if q, ok := quotes[sym]; ok && q.Price > 0 {
 			m.IndexPrice = q.Price
 			break
