@@ -23,7 +23,7 @@ function fmtTime(ms: number) {
       minute: '2-digit',
       second: '2-digit',
     })
-    .replaceAll('/', '-')
+    .replace(/\//g, '-')
 }
 
 export default function TradeStream({ trades }: Props) {
