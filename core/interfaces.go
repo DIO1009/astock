@@ -409,6 +409,17 @@ type DashboardReporter interface {
 	OnQuoteRefresh(equity float64, report PerformanceReport, positions []Position, quotes map[string]*Quote)
 }
 
+// DashboardMarketReporter is an optional display-only interface for syncing
+// already-computed market state to the dashboard.
+//
+// The engine calls SetMarketState after market state calculation is complete,
+// passing MarketState.String() and the current index price to the dashboard.
+// Implementations must not use this display synchronization hook to influence
+// trading decisions.
+type DashboardMarketReporter interface {
+	SetMarketState(state string, indexPrice float64)
+}
+
 // ─── 最终安全控制层 ────────────────────────────────────────────────────────────
 
 // SafetyGuard is the final safety control layer for pre-live deployment.
