@@ -174,18 +174,22 @@ func (e *Engine) refreshDashboardQuotes() {
 		return
 	}
 	positions := e.posMgr.AllPositions()
-	if len(positions) == 0 {
+	if len(positions) == 0 && e.cfg.IndexSymbol == "" {
 		e.dashboard.OnQuoteRefresh(e.perfTracker.Cash(), e.perfTracker.Report(), positions, map[string]*core.Quote{})
 		return
 	}
-	symbolSet := make(map[string]bool, len(positions))
-	symbols := make([]string, 0, len(positions))
+	symbolSet := make(map[string]bool, len(positions)+1)
+	symbols := make([]string, 0, len(positions)+1)
 	for _, pos := range positions {
 		if pos.Symbol == "" || symbolSet[pos.Symbol] {
 			continue
 		}
 		symbolSet[pos.Symbol] = true
 		symbols = append(symbols, pos.Symbol)
+	}
+	if e.cfg.IndexSymbol != "" && !symbolSet[e.cfg.IndexSymbol] {
+		symbolSet[e.cfg.IndexSymbol] = true
+		symbols = append(symbols, e.cfg.IndexSymbol)
 	}
 	quotes := e.provider.GetRealtime(symbols)
 	equity := e.perfTracker.Cash()
@@ -301,6 +305,13 @@ func (e *Engine) processTick() {
 		marketAllows = e.marketFilter.AllowOpen(indexQuote)
 	}
 	if setter, ok := e.alphaEng.(interface{ SetMarketState(core.MarketState) }); ok { setter.SetMarketState(mktState) }
+	if marketReporter, ok := e.dashboard.(core.DashboardMarketReporter); ok {
+		indexPrice := 0.0
+		if indexQuote != nil {
+			indexPrice = indexQuote.Price
+		}
+		marketReporter.SetMarketState(mktState.String(), indexPrice)
+	}
 
 	var signals []core.Signal
 	if e.alphaEng != nil { signals = e.alphaEng.Rank(stockQuotes) }
