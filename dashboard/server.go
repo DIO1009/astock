@@ -452,6 +452,8 @@ func (s *Server) buildAccount(equity float64, report core.PerformanceReport, pos
 	if todayOpen > 0 {
 		todayRet = (equity - todayOpen) / todayOpen * 100
 	}
+	initialCapital := report.InitialCapital
+	totalReturn := report.TotalReturn
 	riskLevel := "NORMAL"
 	curDD := 0.0
 	if s.mon != nil {
@@ -459,10 +461,14 @@ func (s *Server) buildAccount(equity float64, report core.PerformanceReport, pos
 		riskLevel = st.RiskLevel.String()
 		curDD = st.DrawdownPct
 	}
-	if curDD == 0 && report.InitialCapital > 0 && equity < report.InitialCapital {
-		curDD = (report.InitialCapital - equity) / report.InitialCapital * 100
+	if initialCapital > 0 {
+		totalReturn = (equity - initialCapital) / initialCapital * 100
+		curDD = 0
+		if equity < initialCapital {
+			curDD = (initialCapital - equity) / initialCapital * 100
+		}
 	}
-	return AccountInfo{TotalEquity: equity, InitialCapital: report.InitialCapital, Cash: cash, InvestedValue: invested, TodayReturnPct: todayRet, TotalReturnPct: report.TotalReturn, CurrentDrawdownPct: curDD, MaxDrawdownPct: report.MaxDrawdown, PositionPct: posPct, RiskLevel: riskLevel, TickCount: report.TickCount, WinRate: report.WinRate, TradeCount: report.TradeCount, ProfitFactor: report.ProfitFactor}
+	return AccountInfo{TotalEquity: equity, InitialCapital: initialCapital, Cash: cash, InvestedValue: invested, TodayReturnPct: todayRet, TotalReturnPct: totalReturn, CurrentDrawdownPct: curDD, MaxDrawdownPct: report.MaxDrawdown, PositionPct: posPct, RiskLevel: riskLevel, TickCount: report.TickCount, WinRate: report.WinRate, TradeCount: report.TradeCount, ProfitFactor: report.ProfitFactor}
 }
 
 func (s *Server) buildPositions(positions []core.Position, quotes map[string]*core.Quote, _ core.PerformanceReport) []PositionInfo {
