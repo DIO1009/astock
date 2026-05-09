@@ -402,6 +402,11 @@ type DashboardReporter interface {
 	//   positions – snapshot of all open positions at end of tick
 	//   quotes    – all stock quotes fetched this tick (may be nil/empty)
 	OnTick(equity float64, report PerformanceReport, positions []Position, quotes map[string]*Quote)
+
+	// OnQuoteRefresh is only used outside trading hours to refresh dashboard quote display.
+	// It does not represent a trading tick, and must not advance equity-curve tick history
+	// or produce persistent side effects.
+	OnQuoteRefresh(equity float64, report PerformanceReport, positions []Position, quotes map[string]*Quote)
 }
 
 // ─── 最终安全控制层 ────────────────────────────────────────────────────────────
