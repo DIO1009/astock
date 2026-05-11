@@ -13,17 +13,15 @@ const STATUS_STYLES: Record<string, string> = {
 
 function fmtTime(ms: number) {
   if (!ms) return '--'
-  return new Date(ms)
-    .toLocaleString('zh-CN', {
-      hour12: false,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    })
-    .replace(/\//g, '-')
+  const d = new Date(ms)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  const year = d.getFullYear()
+  const month = d.getMonth() + 1
+  const day = d.getDate()
+  const hour = d.getHours()
+  const minute = d.getMinutes()
+  const second = d.getSeconds()
+  return `${year}-${pad(month)}-${pad(day)} ${pad(hour)}:${pad(minute)}:${pad(second)}`
 }
 
 export default function TradeStream({ trades }: Props) {
