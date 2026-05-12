@@ -277,7 +277,8 @@ func (e *Engine) processTick() {
 		}
 	}
 
-	for _, sym := range stockSymbols {
+	for _, pos := range positions {
+		sym := pos.Symbol
 		q := stockQuotes[sym]
 		if q == nil { continue }
 		pos, held := e.posMgr.GetPosition(sym)
