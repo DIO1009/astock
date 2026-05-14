@@ -524,7 +524,7 @@ func (s *Server) buildSafety() SafetyInfo {
 		return SafetyInfo{}
 	}
 	st := s.safetyGuard.SafetyStatus()
-	return SafetyInfo{Streak: st.CurrentStreak, FreezeLeft: st.FreezeTicksLeft, StreakScale: st.StreakScale, ManualStopOpen: st.ManualStopOpen, ForceLiqPending: st.ForceLiqPending, AbnormalCount: st.AbnormalCount, TradingStopped: st.TradingStopped, AllowOpen: s.safetyGuard.AllowOpen()}
+	return SafetyInfo{Streak: st.CurrentStreak, FreezeLeft: st.FreezeTicksLeft, StreakScale: st.StreakScale, ManualStopOpen: st.ManualStopOpen, ForceLiqPending: st.ForceLiqPending, AbnormalCount: st.AbnormalCount, TradingStopped: st.TradingStopped, AllowOpen: s.safetyGuard.AllowOpen(), StreakHalfPositionAt: st.StreakHalfPositionAt, StreakFreezeAt: st.StreakFreezeAt, StreakPositionScale: st.StreakPositionScale}
 }
 
 func (s *Server) buildRisk() RiskInfo {
