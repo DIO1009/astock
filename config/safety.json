@@ -1,0 +1,12 @@
+{
+  "streak_half_position_at": 10,
+  "streak_position_scale": 0.5,
+  "streak_freeze_at": 15,
+  "streak_freeze_ticks": 12,
+  "base_max_total_pct": 0.8,
+  "abnormal_latency_ms": 15000,
+  "abnormal_fill_rate_pct": 5.0,
+  "abnormal_window_ticks": 200,
+  "abnormal_threshold": 100,
+  "status_every_n_ticks": 10
+}
