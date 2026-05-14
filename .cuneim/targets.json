@@ -3,7 +3,7 @@
     "app": {
       "workdir": ".",
       "build": "PATH=/opt/homebrew/bin:/usr/local/go/bin:$PATH go build ./...",
-      "test": "PATH=/opt/homebrew/bin:/usr/local/go/bin:$PATH go test ./... {filter}"
+      "test": "PATH=/opt/homebrew/bin:/usr/local/go/bin:$PATH FILTER={filter}; if [ -n \"$FILTER\" ]; then go test ./... -run \"$FILTER\"; else go test ./...; fi"
     }
   },
   "namespace": "astock_trade",
