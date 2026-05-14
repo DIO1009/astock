@@ -86,10 +86,13 @@ type TradeInfo struct {
 
 // SafetyInfo – Module 5: SafetyGuard state.
 type SafetyInfo struct {
-	Streak          int     `json:"streak"`
-	FreezeLeft      int     `json:"freeze_left"`
-	StreakScale     float64 `json:"streak_scale"`
-	ManualStopOpen  bool    `json:"manual_stop_open"`
+	Streak                int     `json:"streak"`
+	FreezeLeft            int     `json:"freeze_left"`
+	StreakScale           float64 `json:"streak_scale"`
+	StreakHalfPositionAt  int     `json:"streak_half_position_at"`
+	StreakFreezeAt        int     `json:"streak_freeze_at"`
+	StreakPositionScale   float64 `json:"streak_position_scale"`
+	ManualStopOpen        bool    `json:"manual_stop_open"`
 	ForceLiqPending bool    `json:"force_liq_pending"`
 	AbnormalCount   int     `json:"abnormal_count"`
 	TradingStopped  bool    `json:"trading_stopped"`
