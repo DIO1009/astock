@@ -35,7 +35,6 @@ import (
 
 	"astock_trade/adaptive"
 	"astock_trade/alpha/breakout"
-	"astock_trade/alpha/daily"
 	"astock_trade/alpha/momentum"
 	"astock_trade/alpha/registry"
 	"astock_trade/alpha/reversal"
