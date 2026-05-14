@@ -84,10 +84,11 @@ const (
 	tradeLogPath      = "paper_trades.jsonl"
 	execLogPath       = "paper_executions.jsonl"
 	csvDataPath       = "paper_data.csv"
-	positionStatePath = "position_state.jsonl" // Feature 6: 持仓快照文件
-	indexSymbol       = "000001"               // 上证指数（用于 MarketFilter 趋势判断）
-	initialCapital    = 100_000.0
-	dashboardAddr     = ":18099" // Trading Cockpit WebSocket 端口
+	positionStatePath     = "position_state.jsonl" // Feature 6: 持仓快照文件
+	tradingCostConfigPath = "config/trading_cost.json"
+	indexSymbol           = "000001" // 上证指数（用于 MarketFilter 趋势判断）
+	initialCapital        = 100_000.0
+	dashboardAddr         = ":18099" // Trading Cockpit WebSocket 端口
 	// 0 = restore full persisted runtime history instead of truncating to a recent window.
 	restoreLookback = 0 * time.Hour
 
@@ -282,7 +283,12 @@ func main() {
 	// ── Feature 2: 统一 Broker 接口 ───────────────────────────────────────────
 	// 底层使用 realistic.Executor（真实 A 股成本模型）
 	// Paper Broker 包装 Executor 并记录每笔执行的详细信息
-	innerExec := realistic.New(realistic.Default())
+	cfg := realistic.Default()
+	loadedCfg, err := realistic.LoadTradingCostConfig(tradingCostConfigPath, cfg)
+	if err != nil {
+		log.Fatalf("[Paper] 加载交易费率配置失败: %v", err)
+	}
+	innerExec := realistic.New(loadedCfg)
 	paperBroker := paper.New(innerExec, initialCapital)
 	// 双重日志：写入 jsonl + 实时异常检测
 	paperBroker.SetLogger(func(rec *core.ExecutionRecord) {
