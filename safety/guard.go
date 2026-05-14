@@ -378,10 +378,13 @@ func (g *Guard) SafetyStatus() core.SafetyStatus {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	return core.SafetyStatus{
-		CurrentStreak:   g.currentStreak,
-		FreezeTicksLeft: g.frozenTicks,
-		StreakScale:     g.streakScale,
-		ManualStopOpen:  g.manualStopOpen,
+		CurrentStreak:         g.currentStreak,
+		FreezeTicksLeft:       g.frozenTicks,
+		StreakScale:           g.streakScale,
+		StreakHalfPositionAt:  g.cfg.StreakHalfPositionAt,
+		StreakFreezeAt:        g.cfg.StreakFreezeAt,
+		StreakPositionScale:   g.cfg.StreakPositionScale,
+		ManualStopOpen:        g.manualStopOpen,
 		ForceLiqPending: g.forceLiqPending,
 		AbnormalCount:   len(g.abnormalWindow),
 		TradingStopped:  g.tradingStopped,
