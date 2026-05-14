@@ -2,8 +2,8 @@
   "targets": {
     "app": {
       "workdir": ".",
-      "build": "go build ./...",
-      "test": "go test ./... {filter}"
+      "build": "PATH=/opt/homebrew/bin:/usr/local/go/bin:$PATH go build ./...",
+      "test": "PATH=/opt/homebrew/bin:/usr/local/go/bin:$PATH go test ./... {filter}"
     }
   },
   "namespace": "astock_trade",
