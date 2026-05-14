@@ -8,7 +8,7 @@
 //	【Feature 4】实时监控与告警（monitor 跟踪权益/回撤/风险档位/Kill Switch）
 //	【Feature 5】实盘偏差分析（analysis/deviation 统计滑点/成交失败率/延迟）
 //	【Feature 6】上线前最终安全控制（safety.Guard）
-//	  - 连续亏损抑制：≥5笔 → 仓位×0.5；≥8笔 → 停止开仓50tick
+//	  - 连续亏损抑制：≥10笔 → 仓位×0.5；≥15笔 → 停止开仓12tick
 //	  - 人工控制接口：SIGUSR1=StopOpening / SIGUSR2=ForceLiquidate
 //	  - 实盘保护：启动时加载持仓快照；出现执行异常时自动暂停
 //
@@ -22,6 +22,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -81,6 +82,7 @@ const (
 	csvDataPath       = "paper_data.csv"
 	positionStatePath     = "position_state.jsonl" // Feature 6: 持仓快照文件
 	tradingCostConfigPath = "config/trading_cost.json"
+	safetyConfigPath      = "config/safety.json"
 	indexSymbol           = "000001" // 上证指数（用于 MarketFilter 趋势判断）
 	initialCapital        = 100_000.0
 	dashboardAddr         = ":18099" // Trading Cockpit WebSocket 端口
@@ -235,8 +237,8 @@ func main() {
 	// ── Feature 6: 安全控制层 ────────────────────────────────────────────────
 	//
 	//  Feature 6.1 连续亏损抑制：
-	//    streak ≥ 5 → MaxTotalPct × 0.5（通过 portMgr.SetMaxTotalPct）
-	//    streak ≥ 8 → 停止开仓 50 tick
+	//    streak ≥ 10 → MaxTotalPct × 0.5（通过 portMgr.SetMaxTotalPct）
+	//    streak ≥ 15 → 停止开仓 12 tick
 	//
 	//  Feature 6.2 人工控制（UNIX 信号）：
 	//    SIGUSR1 → StopOpening()     （停止新开仓）
@@ -249,8 +251,9 @@ func main() {
 	//    20 tick 内 ≥ 10 次异常 → 暂停所有交易
 	// 模拟盘撮合偶尔超 500ms、首单成交率为 0% 均属正常，
 	// 使用原始 500ms/20%/3次 阈值会导致整天 BUY 被误屏蔽。
-	safetyGuard := safety.New(safety.Config{
-		StreakHalfPositionAt: 5,
+	safetyCfg, err := loadSafetyConfig(safetyConfigPath, safety.Config{
+		StreakHalfPositionAt: 10,
+		StreakPositionScale:  0.5,
 		StreakFreezeAt:       15,
 		StreakFreezeTicks:    12,
 		BaseMaxTotalPct:      0.80,
@@ -259,7 +262,11 @@ func main() {
 		AbnormalWindowTicks:  200,
 		AbnormalThreshold:    100,
 		StatusEveryNTicks:    10,
-	}, portMgr)
+	})
+	if err != nil {
+		log.Fatalf("[Paper] 加载安全控制配置失败: %v", err)
+	}
+	safetyGuard := safety.New(safetyCfg, portMgr)
 
 	// ── Portfolio Risk Engine (for Dashboard RiskInfo) ───────────────────
 	riskCfg := risk.Default()
@@ -898,6 +905,81 @@ func envString(key string, def string) string {
 		return v
 	}
 	return def
+}
+
+type safetyConfigFile struct {
+	StreakHalfPositionAt int     `json:"streak_half_position_at"`
+	StreakPositionScale  float64 `json:"streak_position_scale"`
+	StreakFreezeAt       int     `json:"streak_freeze_at"`
+	StreakFreezeTicks    int     `json:"streak_freeze_ticks"`
+	BaseMaxTotalPct      float64 `json:"base_max_total_pct"`
+	AbnormalLatencyMs    int64   `json:"abnormal_latency_ms"`
+	AbnormalFillRatePct  float64 `json:"abnormal_fill_rate_pct"`
+	AbnormalWindowTicks  int     `json:"abnormal_window_ticks"`
+	AbnormalThreshold    int     `json:"abnormal_threshold"`
+	StatusEveryNTicks    int     `json:"status_every_n_ticks"`
+}
+
+func loadSafetyConfig(path string, cfg safety.Config) (safety.Config, error) {
+	if path == "" {
+		return cfg, nil
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return cfg, err
+	}
+
+	var fileCfg safetyConfigFile
+	if err := json.Unmarshal(data, &fileCfg); err != nil {
+		return cfg, err
+	}
+
+	if fileCfg.StreakHalfPositionAt < 0 ||
+		fileCfg.StreakPositionScale < 0 ||
+		fileCfg.StreakFreezeAt < 0 ||
+		fileCfg.StreakFreezeTicks < 0 ||
+		fileCfg.BaseMaxTotalPct < 0 ||
+		fileCfg.AbnormalLatencyMs < 0 ||
+		fileCfg.AbnormalFillRatePct < 0 ||
+		fileCfg.AbnormalWindowTicks < 0 ||
+		fileCfg.AbnormalThreshold < 0 ||
+		fileCfg.StatusEveryNTicks < 0 {
+		return cfg, fmt.Errorf("安全控制配置不能包含负数")
+	}
+
+	if fileCfg.StreakHalfPositionAt > 0 {
+		cfg.StreakHalfPositionAt = fileCfg.StreakHalfPositionAt
+	}
+	if fileCfg.StreakPositionScale > 0 {
+		cfg.StreakPositionScale = fileCfg.StreakPositionScale
+	}
+	if fileCfg.StreakFreezeAt > 0 {
+		cfg.StreakFreezeAt = fileCfg.StreakFreezeAt
+	}
+	if fileCfg.StreakFreezeTicks > 0 {
+		cfg.StreakFreezeTicks = fileCfg.StreakFreezeTicks
+	}
+	if fileCfg.BaseMaxTotalPct > 0 {
+		cfg.BaseMaxTotalPct = fileCfg.BaseMaxTotalPct
+	}
+	if fileCfg.AbnormalLatencyMs > 0 {
+		cfg.AbnormalLatencyMs = fileCfg.AbnormalLatencyMs
+	}
+	if fileCfg.AbnormalFillRatePct > 0 {
+		cfg.AbnormalFillRatePct = fileCfg.AbnormalFillRatePct
+	}
+	if fileCfg.AbnormalWindowTicks > 0 {
+		cfg.AbnormalWindowTicks = fileCfg.AbnormalWindowTicks
+	}
+	if fileCfg.AbnormalThreshold > 0 {
+		cfg.AbnormalThreshold = fileCfg.AbnormalThreshold
+	}
+	if fileCfg.StatusEveryNTicks > 0 {
+		cfg.StatusEveryNTicks = fileCfg.StatusEveryNTicks
+	}
+
+	return cfg, nil
 }
 
 type multiTradeLogger []core.TradeLogger
