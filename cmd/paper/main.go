@@ -21,9 +21,7 @@
 package main
 
 import (
-	"bufio"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -31,9 +29,7 @@ import (
 	"math/rand"
 	"os"
 	"os/signal"
-	"regexp"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 
