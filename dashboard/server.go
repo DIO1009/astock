@@ -607,11 +607,38 @@ func (s *Server) buildCandidates(positions []core.Position, quotes map[string]*c
 	}
 	inPos := make(map[string]bool, len(positions))
 	for _, p := range positions { inPos[p.Symbol] = true }
+	if s.dbStore != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		rankings, err := s.dbStore.GetTopRankings(ctx, 50)
+		cancel()
+		if err != nil {
+			log.Printf("[Dashboard] 读取候选池基础数据失败: %v", err)
+		} else if len(rankings) > 0 {
+			out := make([]CandidateInfo, 0, len(rankings))
+			for i, row := range rankings {
+				rank := row.Rank
+				if rank <= 0 {
+					rank = i + 1
+				}
+				price, pct := row.Price, 0.0
+				if q, ok := quotes[row.Symbol]; ok && q != nil {
+					price, pct = q.Price, q.PctChg
+				}
+				info := CandidateInfo{Rank: rank, Symbol: row.Symbol, Name: row.Name, Score: row.Score, LiveScore: row.Score, Price: price, PctChg: pct, Ret5d: row.Ret5d, VolumeRatio: row.VolumeRatio, MktCapB: row.MktCap / 1e8, Stability: counts[row.Symbol], InPosition: inPos[row.Symbol]}
+				if sig, ok := signals[row.Symbol]; ok {
+					info.LiveScore = sig.Score
+					info.Breakdown = sig.Breakdown
+				}
+				out = append(out, info)
+			}
+			return out
+		}
+	}
 	out := make([]CandidateInfo, 0, len(signals))
 	rank := 1
 	for sym, sig := range signals {
 		price, pct := 0.0, 0.0
-		if q, ok := quotes[sym]; ok {
+		if q, ok := quotes[sym]; ok && q != nil {
 			price, pct = q.Price, q.PctChg
 		}
 		out = append(out, CandidateInfo{Rank: rank, Symbol: sym, Score: sig.Score, LiveScore: sig.Score, Breakdown: sig.Breakdown, Price: price, PctChg: pct, Stability: counts[sym], InPosition: inPos[sym]})
