@@ -2,6 +2,21 @@ package safety
 
 import "testing"
 
+func TestSafetyStatusIncludesConfiguredThresholds(t *testing.T) {
+	g := New(Config{StreakHalfPositionAt: 10, StreakPositionScale: 0.5, StreakFreezeAt: 15, StreakFreezeTicks: 12}, nil)
+
+	st := g.SafetyStatus()
+	if st.StreakHalfPositionAt != 10 {
+		t.Fatalf("StreakHalfPositionAt = %d, want 10", st.StreakHalfPositionAt)
+	}
+	if st.StreakPositionScale != 0.5 {
+		t.Fatalf("StreakPositionScale = %v, want 0.5", st.StreakPositionScale)
+	}
+	if st.StreakFreezeAt != 15 {
+		t.Fatalf("StreakFreezeAt = %d, want 15", st.StreakFreezeAt)
+	}
+}
+
 func TestLosingStreakConfiguredHalfScaleAndFreeze(t *testing.T) {
 	g := New(Config{StreakHalfPositionAt: 10, StreakPositionScale: 0.5, StreakFreezeAt: 15, StreakFreezeTicks: 12}, nil)
 
