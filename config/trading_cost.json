@@ -1,0 +1,6 @@
+{
+  "commission_pct": 0.000235,
+  "stamp_tax_pct": 0.0005,
+  "transfer_fee_pct": 0.00001,
+  "min_commission": 5.0
+}
