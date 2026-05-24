@@ -76,7 +76,7 @@ func Run(ctx context.Context, st *store.Store, cfg Config) (Result, error) {
 		topLayer2 = DefaultConfig().TopLayer2
 	}
 
-	scored := universe.ScoreAll(stocks, cfg.ExcludedPrefixes, cfg.RequireVolume)
+	scored := universe.ScoreAll(stocks, universe.FilterOpts{ExcludedPrefixes: cfg.ExcludedPrefixes, RequireVolume: cfg.RequireVolume})
 	if len(scored) > topLayer1 {
 		scored = scored[:topLayer1]
 	}
@@ -89,26 +89,19 @@ func Run(ctx context.Context, st *store.Store, cfg Config) (Result, error) {
 	for i, stock := range layer2 {
 		rows = append(rows, store.AlphaRankRow{
 			Date:        res.Date,
-			Rank:        i + 1,
 			Symbol:      stock.Symbol,
 			Name:        stock.Name,
-			Market:      stock.Market,
-			Price:       stock.Price,
-			ChangeP:     stock.ChangeP,
-			Volume:      stock.Volume,
-			Amount:      stock.Amount,
+			Score:       stock.Score,
+			Rank:        i + 1,
+			Ret5d:       stock.Ret5d,
+			Ret20d:      stock.Ret20d,
 			Turnover:    stock.Turnover,
-			PE:          stock.PE,
 			VolumeRatio: stock.VolumeRatio,
 			MktCap:      stock.MktCap,
-			FloatCap:    stock.FloatCap,
-			PB:          stock.PB,
-			Ret5d:       stock.Ret5d,
-			Ret10d:      stock.Ret10d,
-			Ret20d:      stock.Ret20d,
+			Price:       stock.Price,
 		})
 	}
-	if err := st.UpsertAlphaRanks(ctx, rows); err != nil {
+	if err := st.UpsertAlphaRankings(ctx, rows); err != nil {
 		return res, err
 	}
 
