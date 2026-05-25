@@ -82,7 +82,7 @@ const (
 	positionStatePath     = "position_state.jsonl" // Feature 6: 持仓快照文件
 	tradingCostConfigPath = "config/trading_cost.json"
 	safetyConfigPath      = "config/safety.json"
-	indexSymbol           = "000001" // 上证指数（用于 MarketFilter 趋势判断）
+	indexSymbol           = "000001.SH" // 上证指数（用于 MarketFilter 趋势判断）
 	initialCapital        = 100_000.0
 	dashboardAddr         = ":18099" // Trading Cockpit WebSocket 端口
 	// 0 = restore full persisted runtime history instead of truncating to a recent window.
@@ -482,7 +482,7 @@ func main() {
 	var dynScreener *dynamic.Screener // kept for scheduler's ForceRefresh()
 	useDynamic := isLiveMode && dbStore != nil || os.Getenv("ASTOCK_DYNAMIC_SCREENER") == "1"
 	if useDynamic && dbStore != nil {
-		dynN := envInt("ASTOCK_TOP_N", rotCfg.RotationExitRank) // 至少覆盖轮动观察区间
+		dynN := envInt("ASTOCK_TOP_N", 100) // 至少覆盖轮动观察区间
 		if dynN < rotCfg.RotationExitRank {
 			dynN = rotCfg.RotationExitRank
 		}
