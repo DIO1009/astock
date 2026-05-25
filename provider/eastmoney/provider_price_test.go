@@ -154,6 +154,41 @@ func TestBuildQuoteFromRawRejectsImplausibleJumpAndKeepsCachedQuote(t *testing.T
 	}
 }
 
+func TestBuildQuoteFromRawReplacesStaleCorruptedCacheWithNormalizedQuote(t *testing.T) {
+	stale := &core.Quote{Symbol: "603407", Price: 6323}
+	st := &symState{
+		lastQuote: stale,
+		lastPrice: 6323,
+	}
+	raw := &emData{
+		F43: fptr(6323),
+		F60: fptr(6300),
+		F17: fptr(6322),
+		F19: fptr(6324),
+		F47: fptr(1),
+	}
+
+	q, err := buildQuoteFromRaw("603407", st, raw, time.Unix(1700000002, 0))
+	if err != nil {
+		t.Fatalf("buildQuoteFromRaw() error = %v", err)
+	}
+	if !almostEqual(q.Price, 63.23) {
+		t.Fatalf("Price = %.12f, want 63.23", q.Price)
+	}
+	if !almostEqual(q.PrevClose, 63.00) {
+		t.Fatalf("PrevClose = %.12f, want 63.00", q.PrevClose)
+	}
+	if st.lastQuote != q {
+		t.Fatalf("lastQuote was not updated to returned quote")
+	}
+	if !almostEqual(st.lastQuote.Price, 63.23) {
+		t.Fatalf("lastQuote.Price = %.12f, want 63.23", st.lastQuote.Price)
+	}
+	if !almostEqual(st.lastPrice, 63.23) {
+		t.Fatalf("lastPrice = %.12f, want 63.23", st.lastPrice)
+	}
+}
+
 func TestRealtimePriceGuardAllowsNormalLimitMoves(t *testing.T) {
 	if isImplausibleRealtimePrice(69.30, 63.00) {
 		t.Fatalf("10%% move should be allowed")
