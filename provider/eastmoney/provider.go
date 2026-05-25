@@ -488,7 +488,7 @@ func fieldToFloat(v *float64) float64 {
 func normalizeEMPctChg(v *float64, price float64, prevClose float64) float64 {
 	if v != nil {
 		raw := *v
-		if !math.IsNaN(raw) && !math.IsInf(raw, 0) {
+		if !math.IsNaN(raw) && !math.IsInf(raw, 0) && raw != 0 {
 			return raw / 100
 		}
 	}
