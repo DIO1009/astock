@@ -8,6 +8,7 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -171,6 +172,16 @@ func stockInfoFromRaw(rs rawStock) (StockInfo, bool) {
 	if price <= 0 {
 		return StockInfo{}, false
 	}
+	if isNewStockName(rs.F14) {
+		return StockInfo{}, false
+	}
+
+	ret5d := toReturn(rs.F109)
+	ret10d := toReturn(rs.F160)
+	ret20d := toReturn(rs.F110)
+	if hasAbnormalReturns(ret5d, ret10d, ret20d) {
+		return StockInfo{}, false
+	}
 
 	return StockInfo{
 		Symbol:      rs.F12,
@@ -186,9 +197,9 @@ func stockInfoFromRaw(rs rawStock) (StockInfo, bool) {
 		MktCap:      toFloat(rs.F20),
 		FloatCap:    toFloat(rs.F21),
 		PB:          toFloat(rs.F23),
-		Ret5d:       toReturn(rs.F109),
-		Ret10d:      toReturn(rs.F110),
-		Ret20d:      toReturn(rs.F160),
+		Ret5d:       ret5d,
+		Ret10d:      ret10d,
+		Ret20d:      ret20d,
 	}, true
 }
 
@@ -203,6 +214,15 @@ func toFloat(n json.Number) float64 {
 	}
 
 	return f
+}
+
+func isNewStockName(name string) bool {
+	trimmed := strings.TrimSpace(name)
+	return strings.HasPrefix(trimmed, "C") || strings.HasPrefix(trimmed, "N")
+}
+
+func hasAbnormalReturns(ret5d, ret10d, ret20d float64) bool {
+	return math.Abs(ret5d) > 150 || math.Abs(ret10d) > 300 || math.Abs(ret20d) > 500
 }
 
 func toReturn(n json.Number) float64 {
