@@ -24,8 +24,9 @@ const (
 	histLen           = 21
 	emaAlpha          = 2.0 / (20.0 + 1.0)
 	minInterval       = 1200 * time.Millisecond
-	cacheMaxAge       = 15 * time.Second
-	noDataThreshold   = 3
+	cacheMaxAge                 = 15 * time.Second
+	noDataThreshold             = 3
+	maxRealtimePriceMoveRatio   = 0.50
 )
 
 type emResponse struct {
@@ -232,75 +233,31 @@ func (p *Provider) getOne(symbol string) (*core.Quote, error) {
 		return nil, fmt.Errorf("eastmoney no data for %s", symbol)
 	}
 
-	price := fieldToFloat(raw.F43)
-	if price > 10000 {
-		price = price / 100
+	if normalizeEMPrice(raw.F43) <= 0 {
+		p.mu.Lock()
+		st.lastNoData++
+		if st.lastNoData <= noDataThreshold && st.lastQuote != nil {
+			q := *st.lastQuote
+			p.mu.Unlock()
+			return &q, nil
+		}
+		p.mu.Unlock()
+		return nil, fmt.Errorf("eastmoney no data for %s", symbol)
 	}
-	high := fieldToFloat(raw.F44)
-	if high > 10000 {
-		high = high / 100
-	}
-	low := fieldToFloat(raw.F45)
-	if low > 10000 {
-		low = low / 100
-	}
-	prevClose := fieldToFloat(raw.F60)
-	if prevClose > 10000 {
-		prevClose = prevClose / 100
-	}
-	bid1 := fieldToFloat(raw.F17)
-	if bid1 > 10000 {
-		bid1 = bid1 / 100
-	}
-	ask1 := fieldToFloat(raw.F19)
-	if ask1 > 10000 {
-		ask1 = ask1 / 100
-	}
-	volume := int64(fieldToFloat(raw.F47))
-	pctChg := fieldToFloat(raw.F170)
-	if pctChg > 1000 || pctChg < -1000 {
-		pctChg = pctChg / 100
-	}
-	if pctChg == 0 && prevClose > 0 && price > 0 {
-		pctChg = (price - prevClose) / prevClose * 100
-	}
-	if bid1 == 0 {
-		bid1 = price
-	}
-	if ask1 == 0 {
-		ask1 = price
-	}
-	_ = high
-	_ = low
 
+	now := time.Now()
 	p.mu.Lock()
-	st.appendObservation(price, volume)
-	avgVol5d := st.avgVolumeNDays(5)
-	volumeRatio := 0.0
-	if avgVol5d > 0 {
-		volumeRatio = float64(volume) / avgVol5d
+	q, err := buildQuoteFromRaw(symbol, st, raw, now)
+	if err != nil {
+		st.lastErr = err
+		if st.lastQuote != nil {
+			cached := *st.lastQuote
+			p.mu.Unlock()
+			return &cached, nil
+		}
+		p.mu.Unlock()
+		return nil, err
 	}
-	q := &core.Quote{
-		Symbol:      symbol,
-		Price:       price,
-		PrevClose:   prevClose,
-		Bid1:        bid1,
-		Ask1:        ask1,
-		Volume:      volume,
-		PctChg:      pctChg,
-		Return5d:    st.return5d(price),
-		Return20d:   resolveReturn20d(st, price, raw),
-		EMA20:       st.ema20,
-		Volatility:  st.volatility(),
-		AvgVolume5d: avgVol5d,
-		VolumeRatio: volumeRatio,
-		Timestamp:   time.Now().UnixMilli(),
-	}
-	st.lastQuote = q
-	st.lastFetched = time.Now()
-	st.lastErr = nil
-	st.lastNoData = 0
-	st.lastRawClose = price
 	p.mu.Unlock()
 	return q, nil
 }
@@ -398,6 +355,116 @@ func toSecID(symbol string) string {
 		return "1." + symbol
 	}
 	return "0." + symbol
+}
+
+func normalizeEMPrice(v *float64) float64 {
+	if v == nil {
+		return 0
+	}
+	raw := *v
+	if math.IsNaN(raw) || math.IsInf(raw, 0) || raw <= 0 || raw <= -1_000_000 {
+		return 0
+	}
+	return raw / 100
+}
+
+func realtimePriceReferences(st *symState, prevClose float64) []float64 {
+	refs := make([]float64, 0, 3)
+	add := func(price float64) {
+		if price <= 0 {
+			return
+		}
+		for _, ref := range refs {
+			if ref == price {
+				return
+			}
+		}
+		refs = append(refs, price)
+	}
+	add(prevClose)
+	if st != nil {
+		if st.lastQuote != nil {
+			add(st.lastQuote.Price)
+		}
+		add(st.lastPrice)
+	}
+	return refs
+}
+
+func isImplausibleRealtimePrice(price float64, references ...float64) bool {
+	if price <= 0 {
+		return false
+	}
+	for _, reference := range references {
+		if reference <= 0 {
+			continue
+		}
+		if math.Abs(price-reference)/reference > maxRealtimePriceMoveRatio {
+			return true
+		}
+	}
+	return false
+}
+
+func buildQuoteFromRaw(symbol string, st *symState, raw *emData, now time.Time) (*core.Quote, error) {
+	price := normalizeEMPrice(raw.F43)
+	if price <= 0 {
+		return nil, fmt.Errorf("eastmoney invalid price for %s", symbol)
+	}
+	high := normalizeEMPrice(raw.F44)
+	low := normalizeEMPrice(raw.F45)
+	prevClose := normalizeEMPrice(raw.F60)
+	bid1 := normalizeEMPrice(raw.F17)
+	ask1 := normalizeEMPrice(raw.F19)
+	volume := int64(fieldToFloat(raw.F47))
+	pctChg := fieldToFloat(raw.F170)
+	if pctChg > 1000 || pctChg < -1000 {
+		pctChg = pctChg / 100
+	}
+	if pctChg == 0 && prevClose > 0 && price > 0 {
+		pctChg = (price - prevClose) / prevClose * 100
+	}
+	if bid1 == 0 {
+		bid1 = price
+	}
+	if ask1 == 0 {
+		ask1 = price
+	}
+	_ = high
+	_ = low
+
+	if isImplausibleRealtimePrice(price, realtimePriceReferences(st, prevClose)...) {
+		return nil, fmt.Errorf("eastmoney implausible realtime price for %s: %.4f", symbol, price)
+	}
+
+	st.appendObservation(price, volume)
+	avgVol5d := st.avgVolumeNDays(5)
+	volumeRatio := 0.0
+	if avgVol5d > 0 {
+		volumeRatio = float64(volume) / avgVol5d
+	}
+	q := &core.Quote{
+		Symbol:      symbol,
+		Price:       price,
+		PrevClose:   prevClose,
+		Bid1:        bid1,
+		Ask1:        ask1,
+		Volume:      volume,
+		PctChg:      pctChg,
+		Return5d:    st.return5d(price),
+		Return20d:   resolveReturn20d(st, price, raw),
+		EMA20:       st.ema20,
+		Volatility:  st.volatility(),
+		AvgVolume5d: avgVol5d,
+		VolumeRatio: volumeRatio,
+		Timestamp:   now.UnixMilli(),
+	}
+	st.lastQuote = q
+	st.lastFetched = now
+	st.lastErr = nil
+	st.lastNoData = 0
+	st.lastRawClose = price
+	return q, nil
 }
 
 func fieldToFloat(v *float64) float64 {
