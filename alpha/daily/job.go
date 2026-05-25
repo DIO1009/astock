@@ -24,7 +24,7 @@ type Config struct {
 func DefaultConfig() Config {
 	return Config{
 		TopLayer1:       200,
-		TopLayer2:       50,
+		TopLayer2:       100,
 		ScanTimeoutSecs: 300,
 	}
 }
