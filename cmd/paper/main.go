@@ -30,6 +30,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -566,7 +567,22 @@ func main() {
 		tradeLogger,
 		reviewer,
 	)
-	eng.SetRotationPolicy(rotation.New(rotCfg))
+	rotationEnabled := rotationEnabledFromEnv()
+	eng.SetRotationPolicy(rotationPolicyForStartup(rotationEnabled, rotCfg))
+	if rotationEnabled {
+		log.Printf("[Rotation] ✅ 轮动调仓已启用 (ASTOCK_ROTATION_ENABLED=1): start=%s watchRank=%d exitRank=%d confirmTicks=%d confirmDays=%d delta=%.4f lossMult=%.4f maxPerDay=%d",
+			rotCfg.RotationStartTime,
+			rotCfg.RotationWatchRank,
+			rotCfg.RotationExitRank,
+			rotCfg.RotationConfirmTicks,
+			rotCfg.RotationConfirmDays,
+			rotCfg.RotationDelta,
+			rotCfg.LossDeltaMultiplier,
+			rotCfg.MaxRotationPerDay,
+		)
+	} else {
+		log.Printf("[Rotation] ⏸️ 轮动调仓已关闭 (ASTOCK_ROTATION_ENABLED=0/未设置)，仅保留止盈/止损/移动止盈")
+	}
 
 	// ── 自适应优化器 ──────────────────────────────────────────────────────────
 	eng.SetAdaptiveOptimizer(adaptive.New(adaptive.Config{
@@ -904,6 +920,32 @@ func envString(key string, def string) string {
 		return v
 	}
 	return def
+}
+
+func envBool(key string, def bool) bool {
+	v := strings.TrimSpace(strings.ToLower(os.Getenv(key)))
+	if v == "" {
+		return def
+	}
+	switch v {
+	case "1", "true", "t", "yes", "y", "on":
+		return true
+	case "0", "false", "f", "no", "n", "off":
+		return false
+	default:
+		return def
+	}
+}
+
+func rotationEnabledFromEnv() bool {
+	return envBool("ASTOCK_ROTATION_ENABLED", false)
+}
+
+func rotationPolicyForStartup(enabled bool, cfg rotation.Config) *rotation.Policy {
+	if !enabled {
+		return nil
+	}
+	return rotation.New(cfg)
 }
 
 
