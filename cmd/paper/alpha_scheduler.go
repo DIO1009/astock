@@ -146,7 +146,7 @@ func runAndRefresh(ctx context.Context, st *store.Store, sc *dynamic.Screener, d
 
 	cfg := daily.Config{
 		TopLayer1:        envInt("ASTOCK_TOP_LAYER1", 200),
-		TopLayer2:        envInt("ASTOCK_TOP_N", rotation.DefaultConfig().RotationExitRank),
+		TopLayer2:        envInt("ASTOCK_TOP_N", 100),
 		ScanTimeoutSecs:  envInt("ASTOCK_SCAN_TIMEOUT", 300),
 		ExcludedPrefixes: excludedPrefixes,
 		RequireVolume:    true, // reject suspended stocks (Volume==0 during trading hours)
