@@ -395,15 +395,17 @@ func isImplausibleRealtimePrice(price float64, references ...float64) bool {
 	if price <= 0 {
 		return false
 	}
+	hasPositiveReference := false
 	for _, reference := range references {
 		if reference <= 0 {
 			continue
 		}
-		if math.Abs(price-reference)/reference > maxRealtimePriceMoveRatio {
-			return true
+		hasPositiveReference = true
+		if math.Abs(price-reference)/reference <= maxRealtimePriceMoveRatio {
+			return false
 		}
 	}
-	return false
+	return hasPositiveReference
 }
 
 func buildQuoteFromRaw(symbol string, st *symState, raw *emData, now time.Time) (*core.Quote, error) {
