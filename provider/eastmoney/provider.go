@@ -300,7 +300,7 @@ func (p *Provider) fetchRaw(ctx context.Context, symbol string) (*emData, error)
 		return nil, err
 	}
 	fields := requestFields
-	if shanghaiIndexes(symbol) {
+	if isShanghaiIndexAlias(symbol) {
 		fields = indexRequestFields
 	}
 	q := req.URL.Query()
@@ -346,11 +346,26 @@ func (p *Provider) stateFor(symbol string) *symState {
 	return st
 }
 
-func shanghaiIndexes(symbol string) bool {
-	return symbol == "000001" || symbol == "000016" || symbol == "000300" || symbol == "000905"
+func isShanghaiIndexAlias(symbol string) bool {
+	switch symbol {
+	case "000001.SH", "SH000001", "000016.SH", "SH000016", "000300.SH", "SH000300", "000905.SH", "SH000905":
+		return true
+	default:
+		return false
+	}
 }
 
 func toSecID(symbol string) string {
+	switch symbol {
+	case "000001.SH", "SH000001":
+		return "1.000001"
+	case "000016.SH", "SH000016":
+		return "1.000016"
+	case "000300.SH", "SH000300":
+		return "1.000300"
+	case "000905.SH", "SH000905":
+		return "1.000905"
+	}
 	if len(symbol) > 0 && (symbol[0] == '6' || symbol[0] == '9') {
 		return "1." + symbol
 	}
@@ -419,13 +434,7 @@ func buildQuoteFromRaw(symbol string, st *symState, raw *emData, now time.Time) 
 	bid1 := normalizeEMPrice(raw.F17)
 	ask1 := normalizeEMPrice(raw.F19)
 	volume := int64(fieldToFloat(raw.F47))
-	pctChg := fieldToFloat(raw.F170)
-	if pctChg > 1000 || pctChg < -1000 {
-		pctChg = pctChg / 100
-	}
-	if pctChg == 0 && prevClose > 0 && price > 0 {
-		pctChg = (price - prevClose) / prevClose * 100
-	}
+	pctChg := normalizeEMPctChg(raw.F170, price, prevClose)
 	if bid1 == 0 {
 		bid1 = price
 	}
@@ -474,6 +483,19 @@ func fieldToFloat(v *float64) float64 {
 		return 0
 	}
 	return *v
+}
+
+func normalizeEMPctChg(v *float64, price float64, prevClose float64) float64 {
+	if v != nil {
+		raw := *v
+		if !math.IsNaN(raw) && !math.IsInf(raw, 0) {
+			return raw / 100
+		}
+	}
+	if price > 0 && prevClose > 0 {
+		return (price - prevClose) / prevClose * 100
+	}
+	return 0
 }
 
 func (p *Provider) LastPrice(symbol string) float64 {
