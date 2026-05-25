@@ -94,6 +94,7 @@ export interface RiskInfo {
 
 export interface MarketInfo {
   state: string        // UPTREND | DOWNTREND | OSCILLATE
+  index_name: string
   index_price: number
 }
 
