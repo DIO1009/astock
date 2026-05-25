@@ -77,8 +77,8 @@ func TestBuildQuoteFromRawNormalizesAllPriceFields(t *testing.T) {
 	if !almostEqual(q.Ask1, 63.24) {
 		t.Fatalf("Ask1 = %.12f, want 63.24", q.Ask1)
 	}
-	if !almostEqual(q.Volume, 12345) {
-		t.Fatalf("Volume = %.12f, want 12345", q.Volume)
+	if q.Volume != 12345 {
+		t.Fatalf("Volume = %d, want 12345", q.Volume)
 	}
 	if !almostEqual(q.PctChg, wantPctChg) {
 		t.Fatalf("PctChg = %.12f, want %.12f", q.PctChg, wantPctChg)
