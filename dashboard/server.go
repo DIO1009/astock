@@ -243,7 +243,7 @@ func (s *Server) OnQuoteRefresh(equity float64, report core.PerformanceReport, p
 
 func (s *Server) SetMarketState(state string, indexPrice float64) {
 	s.mu.Lock()
-	s.lastMarket = MarketInfo{State: state, IndexPrice: indexPrice}
+	s.lastMarket = MarketInfo{State: state, IndexName: "上证指数", IndexPrice: indexPrice}
 	s.mu.Unlock()
 }
 
@@ -586,7 +586,8 @@ func (s *Server) buildMarket(quotes map[string]*core.Quote) MarketInfo {
 	s.mu.RLock()
 	m := s.lastMarket
 	s.mu.RUnlock()
-	for _, sym := range []string{"000001", "000001.SH", "SH000001", "000300", "000300.SH", "399300", "399300.SZ", "CSI300"} {
+	m.IndexName = "上证指数"
+	for _, sym := range []string{"000001.SH", "SH000001"} {
 		if q, ok := quotes[sym]; ok && q.Price > 0 {
 			m.IndexPrice = q.Price
 			break
@@ -609,7 +610,7 @@ func (s *Server) buildCandidates(positions []core.Position, quotes map[string]*c
 	for _, p := range positions { inPos[p.Symbol] = true }
 	if s.dbStore != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		rankings, err := s.dbStore.GetTopRankings(ctx, 50)
+		rankings, err := s.dbStore.GetTopRankings(ctx, 100)
 		cancel()
 		if err != nil {
 			log.Printf("[Dashboard] 读取候选池基础数据失败: %v", err)
