@@ -45,6 +45,52 @@ func TestNormalizeEMPriceCentFields(t *testing.T) {
 	}
 }
 
+func TestNormalizeEMPctChgParsesCentPercentFields(t *testing.T) {
+	cases := []struct {
+		name      string
+		raw       *float64
+		price     float64
+		prevClose float64
+		want      float64
+	}{
+		{name: "f170 999", raw: fptr(999), want: 9.99},
+		{name: "f170 1000", raw: fptr(1000), want: 10.00},
+		{name: "f170 -180", raw: fptr(-180), want: -1.80},
+		{name: "f170 -912", raw: fptr(-912), want: -9.12},
+		{name: "nil f170 falls back to price and prev close", raw: nil, price: 63.23, prevClose: 63.00, want: (63.23 - 63.00) / 63.00 * 100},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := normalizeEMPctChg(tc.raw, tc.price, tc.prevClose)
+			if !almostEqual(got, tc.want) {
+				t.Fatalf("normalizeEMPctChg() = %.12f, want %.12f", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestToSecIDDisambiguatesShanghaiCompositeIndex(t *testing.T) {
+	cases := []struct {
+		symbol string
+		want   string
+	}{
+		{symbol: "000001.SH", want: "1.000001"},
+		{symbol: "SH000001", want: "1.000001"},
+		{symbol: "000001", want: "0.000001"},
+		{symbol: "603407", want: "1.603407"},
+		{symbol: "002428", want: "0.002428"},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.symbol, func(t *testing.T) {
+			if got := toSecID(tc.symbol); got != tc.want {
+				t.Fatalf("toSecID(%q) = %q, want %q", tc.symbol, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestBuildQuoteFromRawNormalizesAllPriceFields(t *testing.T) {
 	st := &symState{}
 	raw := &emData{
@@ -222,6 +268,9 @@ func TestProviderSourceDoesNotContainOldPriceBugPatterns(t *testing.T) {
 	compact := strings.NewReplacer(" ", "", "\t", "", "\n", "", "\r", "").Replace(string(src))
 	if strings.Contains(compact, ">10000") {
 		t.Fatalf("provider.go contains old high-value threshold normalization pattern >10000")
+	}
+	if strings.Contains(compact, "pctChg>1000") || strings.Contains(compact, "pctChg<-1000") {
+		t.Fatalf("provider.go contains old f170 threshold normalization pattern around +/-1000")
 	}
 	if strings.Contains(string(src), "raw.F165") {
 		t.Fatalf("provider.go must not use raw.F165 to populate Return20d or other quote fields")
