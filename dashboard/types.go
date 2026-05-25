@@ -114,7 +114,8 @@ type RiskInfo struct {
 // MarketInfo – Module 6: market regime.
 type MarketInfo struct {
 	State      string  `json:"state"`       // UPTREND / DOWNTREND / OSCILLATE
-	IndexPrice float64 `json:"index_price"` // CSI-300 last price
+	IndexName  string  `json:"index_name"`  // market index display name
+	IndexPrice float64 `json:"index_price"` // Shanghai Composite last price
 }
 
 // StrategyInfo – one row in the strategy weight table.
