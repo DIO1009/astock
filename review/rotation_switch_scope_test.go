@@ -54,7 +54,7 @@ func TestStartScriptPreservesRotationEnv(t *testing.T) {
 	if !strings.Contains(content, "logs") {
 		t.Fatalf("scripts/start.sh must use logs")
 	}
-	if !strings.Contains(content, `echo "$pid" >"$PID_FILE"`) && !strings.Contains(content, `printf "%s\n" "$pid" >"$PID_FILE"`) {
+	if !strings.Contains(content, `echo "$PID" >"$PID_FILE"`) && !strings.Contains(content, `printf "%s\n" "$PID" >"$PID_FILE"`) {
 		t.Fatalf("scripts/start.sh must write the captured background PID into $PID_FILE")
 	}
 
