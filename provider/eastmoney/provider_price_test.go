@@ -1,8 +1,14 @@
 package eastmoney
 
 import (
+	"context"
+	"errors"
+	"io"
+	"net/http"
 	"os"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -17,6 +23,29 @@ func almostEqual(a, b float64) bool {
 		diff = -diff
 	}
 	return diff < 1e-9
+}
+
+type roundTripFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+type timeoutErr struct{}
+
+func (timeoutErr) Error() string   { return "timeout" }
+func (timeoutErr) Timeout() bool   { return true }
+func (timeoutErr) Temporary() bool { return true }
+
+func emJSON(symbol string, priceCents int) *http.Response {
+	_ = symbol
+	price := strconv.Itoa(priceCents)
+	body := `{"rc":0,"data":{"f43":` + price + `,"f60":` + price + `,"f17":` + price + `,"f19":` + price + `,"f47":1000,"f170":0}}`
+	return &http.Response{
+		StatusCode: http.StatusOK,
+		Header:     make(http.Header),
+		Body:       io.NopCloser(strings.NewReader(body)),
+	}
 }
 
 func TestNormalizeEMPriceCentFields(t *testing.T) {
@@ -256,6 +285,131 @@ func TestRealtimePriceGuardAllowsNormalLimitMoves(t *testing.T) {
 	}
 	if isImplausibleRealtimePrice(63.00, -1) {
 		t.Fatalf("negative reference should not be rejected by implausible-jump guard")
+	}
+}
+
+func TestGetRealtimeConcurrencyLimitCapsTop100Burst(t *testing.T) {
+	symbols := make([]string, 32)
+	for i := range symbols {
+		symbols[i] = "6000" + strconv.Itoa(i+100)[1:]
+	}
+
+	p := New()
+	var mu sync.Mutex
+	active := 0
+	maxActive := 0
+	p.client = &http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		mu.Lock()
+		active++
+		if active > maxActive {
+			maxActive = active
+		}
+		mu.Unlock()
+
+		time.Sleep(10 * time.Millisecond)
+
+		mu.Lock()
+		active--
+		mu.Unlock()
+		return emJSON("", 10000), nil
+	})}
+
+	quotes := p.GetRealtime(symbols)
+	if len(quotes) != len(symbols) {
+		t.Fatalf("len(quotes) = %d, want %d", len(quotes), len(symbols))
+	}
+	if maxActive > maxRealtimeConcurrency {
+		t.Fatalf("maxActive = %d exceeds maxRealtimeConcurrency = %d", maxActive, maxRealtimeConcurrency)
+	}
+}
+
+func TestFetchRawWithRetryRetriesTransientEOFOnce(t *testing.T) {
+	p := New()
+	attempts := 0
+	p.client = &http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		attempts++
+		if attempts == 1 {
+			return nil, io.EOF
+		}
+		return emJSON("600000", 10000), nil
+	})}
+
+	q, err := p.getOne("600000")
+	if err != nil {
+		t.Fatalf("getOne() error = %v", err)
+	}
+	if q == nil {
+		t.Fatalf("getOne() quote = nil, want non-nil")
+	}
+	if !almostEqual(q.Price, 100.00) {
+		t.Fatalf("Price = %.12f, want 100.00", q.Price)
+	}
+	if attempts != 2 {
+		t.Fatalf("attempts = %d, want 2", attempts)
+	}
+}
+
+func TestGetOneUsesRecentCacheFallbackButRejectsStaleCache(t *testing.T) {
+	p := New()
+	p.mu.Lock()
+	p.states["600000"] = &symState{
+		lastQuote:   &core.Quote{Symbol: "600000", Price: 100},
+		lastFetched: time.Now().Add(-(cacheMaxAge + time.Second)),
+	}
+	p.states["600001"] = &symState{
+		lastQuote:   &core.Quote{Symbol: "600001", Price: 101},
+		lastFetched: time.Now().Add(-(cacheFallbackMaxAge + time.Second)),
+	}
+	p.mu.Unlock()
+	p.client = &http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		return nil, io.EOF
+	})}
+
+	q, err := p.getOne("600000")
+	if err != nil {
+		t.Fatalf("getOne(600000) error = %v", err)
+	}
+	if q == nil {
+		t.Fatalf("getOne(600000) quote = nil, want cached quote")
+	}
+	if !almostEqual(q.Price, 100) {
+		t.Fatalf("cached Price = %.12f, want 100", q.Price)
+	}
+
+	q, err = p.getOne("600001")
+	if err == nil {
+		t.Fatalf("getOne(600001) error = nil, want non-nil")
+	}
+	if q != nil {
+		t.Fatalf("getOne(600001) quote = %#v, want nil", q)
+	}
+}
+
+func TestIsTransientRealtimeErrorClassifiesNetworkFailures(t *testing.T) {
+	if !isTransientRealtimeError(io.EOF) {
+		t.Fatalf("io.EOF should be transient")
+	}
+	if !isTransientRealtimeError(errors.New("read: connection reset by peer")) {
+		t.Fatalf("connection reset by peer should be transient")
+	}
+	if !isTransientRealtimeError(timeoutErr{}) {
+		t.Fatalf("timeout net.Error should be transient")
+	}
+	if isTransientRealtimeError(errors.New("eastmoney rc=-1")) {
+		t.Fatalf("eastmoney rc=-1 should not be transient")
+	}
+}
+
+func TestFetchRawWithRetryStopsOnContextCancellation(t *testing.T) {
+	p := New()
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	p.client = &http.Client{Transport: roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		return nil, io.EOF
+	})}
+
+	if _, err := p.fetchRawWithRetry(ctx, "600000"); err == nil {
+		t.Fatalf("fetchRawWithRetry() error = nil, want non-nil")
 	}
 }
 
