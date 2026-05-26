@@ -18,4 +18,21 @@ case "${ASTOCK_ROTATION_ENABLED}" in
     ;;
 esac
 
-exec go run ./cmd/paper
+mkdir -p logs scripts/pids
+
+PID_FILE="scripts/pids/paper_trader.pid"
+if [[ -f "$PID_FILE" ]]; then
+  if kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
+    echo "[start.sh] paper trader already running: pid=$(cat "$PID_FILE")"
+    exit 0
+  fi
+  rm -f "$PID_FILE"
+fi
+
+LOG_FILE="logs/paper_trader_$(date +%Y%m%d_%H%M%S).log"
+nohup go run ./cmd/paper >"$LOG_FILE" 2>&1 &
+PID="$!"
+echo "$PID" >"$PID_FILE"
+
+echo "[start.sh] paper trader started: pid=${PID}"
+echo "[start.sh] log: ${LOG_FILE}"

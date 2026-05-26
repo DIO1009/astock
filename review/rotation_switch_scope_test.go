@@ -42,13 +42,44 @@ func TestStartScriptPreservesRotationEnv(t *testing.T) {
 	if !strings.Contains(content, "export ASTOCK_ROTATION_ENABLED") {
 		t.Fatalf("scripts/start.sh must export ASTOCK_ROTATION_ENABLED")
 	}
-	if !strings.Contains(content, "exec go run ./cmd/paper") {
-		t.Fatalf("scripts/start.sh must exec go run ./cmd/paper")
+	if strings.Contains(content, "exec go run ./cmd/paper") {
+		t.Fatalf("scripts/start.sh must not exec go run ./cmd/paper; it should start in the background")
+	}
+	if !strings.Contains(content, "nohup go run ./cmd/paper") {
+		t.Fatalf("scripts/start.sh must use nohup go run ./cmd/paper")
+	}
+	if !strings.Contains(content, "scripts/pids/paper_trader.pid") {
+		t.Fatalf("scripts/start.sh must write scripts/pids/paper_trader.pid")
+	}
+	if !strings.Contains(content, "logs") {
+		t.Fatalf("scripts/start.sh must use logs")
+	}
+	if !strings.Contains(content, `echo "$PID" >"$PID_FILE"`) && !strings.Contains(content, `printf "%s\n" "$PID" >"$PID_FILE"`) {
+		t.Fatalf("scripts/start.sh must write the captured background PID into $PID_FILE")
 	}
 
 	directAssignment := regexp.MustCompile(`(?m)^\s*ASTOCK_ROTATION_ENABLED=`)
 	if match := directAssignment.FindString(content); match != "" {
 		t.Fatalf("scripts/start.sh must not overwrite command-prefix ASTOCK_ROTATION_ENABLED value with direct assignment %q", match)
+	}
+
+	checkShellSyntax := func(script string) {
+		cmd := exec.Command("bash", "-n", script)
+		cmd.Dir = root
+		var stdout bytes.Buffer
+		var stderr bytes.Buffer
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+		if err := cmd.Run(); err != nil {
+			t.Fatalf("bash -n %s failed: %v\nstdout:\n%s\nstderr:\n%s", script, err, stdout.String(), stderr.String())
+		}
+	}
+
+	checkShellSyntax(filepath.Join("scripts", "start.sh"))
+	if _, err := os.Stat(filepath.Join(root, "scripts", "stop.sh")); err == nil {
+		checkShellSyntax(filepath.Join("scripts", "stop.sh"))
+	} else if !os.IsNotExist(err) {
+		t.Fatalf("stat scripts/stop.sh: %v", err)
 	}
 }
 
