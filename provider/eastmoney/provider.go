@@ -3,12 +3,14 @@ package eastmoney
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
 	"math"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -24,9 +26,14 @@ const (
 	histLen           = 21
 	emaAlpha          = 2.0 / (20.0 + 1.0)
 	minInterval       = 1200 * time.Millisecond
-	cacheMaxAge                 = 15 * time.Second
-	noDataThreshold             = 3
-	maxRealtimePriceMoveRatio   = 0.50
+	cacheMaxAge       = 15 * time.Second
+
+	maxRealtimeConcurrency    = 8
+	realtimeFetchAttempts      = 2
+	realtimeRetryBaseDelay     = 120 * time.Millisecond
+	cacheFallbackMaxAge       = 60 * time.Second
+	noDataThreshold           = 3
+	maxRealtimePriceMoveRatio = 0.50
 )
 
 type emResponse struct {
@@ -175,6 +182,7 @@ func New() *Provider {
 
 func (p *Provider) GetRealtime(symbols []string) map[string]*core.Quote {
 	out := make(map[string]*core.Quote, len(symbols))
+	sem := make(chan struct{}, realtimeConcurrencyLimit(len(symbols)))
 	var wg sync.WaitGroup
 	var outMu sync.Mutex
 	for _, sym := range symbols {
@@ -185,6 +193,8 @@ func (p *Provider) GetRealtime(symbols []string) map[string]*core.Quote {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
+			sem <- struct{}{}
+			defer func() { <-sem }()
 			q, err := p.getOne(symbol)
 			if err != nil {
 				log.Printf("[EastMoney] 获取 %s 实时行情失败: %v", symbol, err)
@@ -201,59 +211,62 @@ func (p *Provider) GetRealtime(symbols []string) map[string]*core.Quote {
 
 func (p *Provider) getOne(symbol string) (*core.Quote, error) {
 	st := p.stateFor(symbol)
+	now := time.Now()
 	p.mu.Lock()
-	if st.lastQuote != nil && time.Since(st.lastFetched) <= cacheMaxAge {
+	if st.lastQuote != nil && now.Sub(st.lastFetched) <= cacheMaxAge {
 		q := *st.lastQuote
 		p.mu.Unlock()
 		return &q, nil
 	}
 	p.mu.Unlock()
 
-	raw, err := p.fetchRaw(context.Background(), symbol)
+	raw, err := p.fetchRawWithRetry(context.Background(), symbol)
 	if err != nil {
 		p.mu.Lock()
 		st.lastErr = err
-		if st.lastQuote != nil {
-			q := *st.lastQuote
+		if cached := p.cachedQuoteIfRecent(st, time.Now()); cached != nil {
 			p.mu.Unlock()
-			return &q, nil
+			return cached, nil
 		}
 		p.mu.Unlock()
 		return nil, err
 	}
 	if raw == nil || raw.F43 == nil {
+		err := fmt.Errorf("eastmoney no data for %s", symbol)
 		p.mu.Lock()
 		st.lastNoData++
-		if st.lastNoData <= noDataThreshold && st.lastQuote != nil {
-			q := *st.lastQuote
-			p.mu.Unlock()
-			return &q, nil
+		if st.lastNoData <= noDataThreshold {
+			if cached := p.cachedQuoteIfRecent(st, time.Now()); cached != nil {
+				p.mu.Unlock()
+				return cached, nil
+			}
 		}
 		p.mu.Unlock()
-		return nil, fmt.Errorf("eastmoney no data for %s", symbol)
+		return nil, err
 	}
 
 	if normalizeEMPrice(raw.F43) <= 0 {
+		err := fmt.Errorf("eastmoney no data for %s", symbol)
 		p.mu.Lock()
 		st.lastNoData++
-		if st.lastNoData <= noDataThreshold && st.lastQuote != nil {
-			q := *st.lastQuote
-			p.mu.Unlock()
-			return &q, nil
+		if st.lastNoData <= noDataThreshold {
+			if cached := p.cachedQuoteIfRecent(st, time.Now()); cached != nil {
+				p.mu.Unlock()
+				return cached, nil
+			}
 		}
 		p.mu.Unlock()
-		return nil, fmt.Errorf("eastmoney no data for %s", symbol)
+		return nil, err
 	}
 
-	now := time.Now()
+	now = time.Now()
 	p.mu.Lock()
 	q, err := buildQuoteFromRaw(symbol, st, raw, now)
 	if err != nil {
 		st.lastErr = err
-		if st.lastQuote != nil {
-			cached := *st.lastQuote
+		if cached := p.cachedQuoteIfRecent(st, now); cached != nil {
 			p.mu.Unlock()
-			return &cached, nil
+			return cached, nil
 		}
 		p.mu.Unlock()
 		return nil, err
@@ -289,6 +302,50 @@ func (p *Provider) DiagnosticInputs(symbols []string) map[string]core.FactorDiag
 		}
 	}
 	return out
+}
+
+func (p *Provider) fetchRawWithRetry(ctx context.Context, symbol string) (*emData, error) {
+	var lastErr error
+	for attempt := 0; attempt < realtimeFetchAttempts; attempt++ {
+		raw, err := p.fetchRaw(ctx, symbol)
+		if err == nil {
+			return raw, nil
+		}
+		lastErr = err
+		if attempt+1 >= realtimeFetchAttempts || !isTransientRealtimeError(err) {
+			return nil, err
+		}
+		timer := time.NewTimer(realtimeRetryBaseDelay * time.Duration(attempt+1))
+		select {
+		case <-ctx.Done():
+			if !timer.Stop() {
+				<-timer.C
+			}
+			return nil, ctx.Err()
+		case <-timer.C:
+		}
+	}
+	return nil, lastErr
+}
+
+func isTransientRealtimeError(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, io.EOF) {
+		return true
+	}
+	var netErr net.Error
+	if errors.As(err, &netErr) && (netErr.Timeout() || netErr.Temporary()) {
+		return true
+	}
+	msg := strings.ToLower(err.Error())
+	for _, part := range []string{"connection reset", "connection refused", "unexpected eof", "server closed idle connection", "timeout"} {
+		if strings.Contains(msg, part) {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *Provider) fetchRaw(ctx context.Context, symbol string) (*emData, error) {
@@ -332,6 +389,16 @@ func (p *Provider) fetchRaw(ctx context.Context, symbol string) (*emData, error)
 	return decoded.Data, nil
 }
 
+func realtimeConcurrencyLimit(symbolCount int) int {
+	if symbolCount <= 0 {
+		return 1
+	}
+	if symbolCount < maxRealtimeConcurrency {
+		return symbolCount
+	}
+	return maxRealtimeConcurrency
+}
+
 func (p *Provider) stateFor(symbol string) *symState {
 	p.mu.Lock()
 	defer p.mu.Unlock()
@@ -344,6 +411,14 @@ func (p *Provider) stateFor(symbol string) *symState {
 		p.states[symbol] = st
 	}
 	return st
+}
+
+func (p *Provider) cachedQuoteIfRecent(st *symState, now time.Time) *core.Quote {
+	if st.lastQuote == nil || now.Sub(st.lastFetched) > cacheFallbackMaxAge {
+		return nil
+	}
+	q := *st.lastQuote
+	return &q
 }
 
 func isShanghaiIndexAlias(symbol string) bool {
