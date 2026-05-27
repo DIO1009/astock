@@ -18,9 +18,9 @@ case "${ASTOCK_ROTATION_ENABLED}" in
     ;;
 esac
 
-mkdir -p logs scripts/pids
+mkdir -p logs
 
-PID_FILE="scripts/pids/paper_trader.pid"
+PID_FILE="${REPO_ROOT}/scripts/pids"
 if [[ -f "$PID_FILE" ]]; then
   if kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
     echo "[start.sh] paper trader already running: pid=$(cat "$PID_FILE")"
