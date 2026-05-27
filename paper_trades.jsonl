@@ -1,0 +1,199 @@
+{"Symbol":"600666","Side":"BUY","Price":6.481184626044804,"Quantity":1552,"Reason":"ALPHA  rank#1  score=+0.3536  alloc=¥10000","Timestamp":1775785215422}
+{"Symbol":"002181","Side":"BUY","Price":12.773877262236656,"Quantity":789,"Reason":"ALPHA  rank#1  score=+0.3460  alloc=¥10000","Timestamp":1775785515419}
+{"Symbol":"000815","Side":"BUY","Price":19.51191976296191,"Quantity":516,"Reason":"ALPHA  rank#1  score=+0.5600  alloc=¥10000","Timestamp":1775786115255}
+{"Symbol":"002718","Side":"BUY","Price":80.30291108194506,"Quantity":125,"Reason":"ALPHA  rank#1  score=+0.5696  alloc=¥10000","Timestamp":1775786715473}
+{"Symbol":"002428","Side":"BUY","Price":56.069192146681765,"Quantity":179,"Reason":"ALPHA  rank#2  score=+0.5012  alloc=¥10000","Timestamp":1775787015401}
+{"Symbol":"001267","Side":"BUY","Price":43.377155944561956,"Quantity":232,"Reason":"ALPHA  rank#1  score=+0.4998  alloc=¥10000","Timestamp":1775788815540}
+{"Symbol":"000890","Side":"BUY","Price":14.315367583015918,"Quantity":679,"Reason":"ALPHA  rank#2  score=+0.4483  alloc=¥9657","Timestamp":1775798115614}
+{"Symbol":"002082","Side":"BUY","Price":30.23793476104232,"Quantity":330,"Reason":"ALPHA  rank#1  score=+0.3651  alloc=¥9937","Timestamp":1775802615610}
+{"Symbol":"600666","Side":"SELL","Price":5.952502484118149,"Quantity":1552,"Reason":"STOP_LOSS    avg=  6.4812  max=  6.5600  now=  6.0400  pnl=-6.81%  sell=1552/1552","Timestamp":1776043815356}
+{"Symbol":"002082","Side":"SELL","Price":28.685606353539914,"Quantity":330,"Reason":"ROTATION  avg= 30.2379  now= 29.3200  pnl=-3.04%  sell=330/330","Timestamp":1776043815384}
+{"Symbol":"000890","Side":"SELL","Price":12.646895162658119,"Quantity":564,"Reason":"STOP_LOSS    avg= 14.3154  max= 14.3154  now= 12.7900  pnl=-10.66%  sell=679/679","Timestamp":1776044115534}
+{"Symbol":"002428","Side":"SELL","Price":55.38872246407097,"Quantity":174,"Reason":"ROTATION  avg= 56.0692  now= 55.8800  pnl=-0.34%  sell=179/179","Timestamp":1776044115423}
+{"Symbol":"000890","Side":"SELL","Price":12.686778981694838,"Quantity":115,"Reason":"STOP_LOSS    avg= 14.3154  max= 14.3154  now= 12.7900  pnl=-10.66%  sell=115/115","Timestamp":1776044415220}
+{"Symbol":"000815","Side":"SELL","Price":18.570847540475086,"Quantity":516,"Reason":"ROTATION  avg= 19.5119  now= 18.7800  pnl=-3.75%  sell=516/516","Timestamp":1776044415235}
+{"Symbol":"002718","Side":"SELL","Price":73.53842234294231,"Quantity":63,"Reason":"ROTATION  avg= 80.3029  now= 74.4400  pnl=-7.30%  sell=125/125","Timestamp":1776044415367}
+{"Symbol":"002718","Side":"SELL","Price":73.7088419719503,"Quantity":62,"Reason":"ROTATION  avg= 80.3029  now= 74.6600  pnl=-7.03%  sell=62/62","Timestamp":1776044715534}
+{"Symbol":"002428","Side":"SELL","Price":54.76855789884917,"Quantity":5,"Reason":"ROTATION  avg= 56.0692  now= 55.0700  pnl=-1.78%  sell=5/5","Timestamp":1776044715107}
+{"Symbol":"002181","Side":"SELL","Price":12.378168748074643,"Quantity":789,"Reason":"ROTATION  avg= 12.7739  now= 12.5100  pnl=-2.07%  sell=789/789","Timestamp":1776045015556}
+{"Symbol":"002667","Side":"BUY","Price":26.28185530204406,"Quantity":291,"Reason":"ALPHA  rank#2  score=+0.3268  alloc=¥10000","Timestamp":1776045774286}
+{"Symbol":"002432","Side":"BUY","Price":89.06855880496893,"Quantity":113,"Reason":"ALPHA  rank#2  score=+0.5266  alloc=¥10000","Timestamp":1776046374544}
+{"Symbol":"603052","Side":"BUY","Price":70.89791549520388,"Quantity":142,"Reason":"ALPHA  rank#2  score=+0.3968  alloc=¥10000","Timestamp":1776049674400}
+{"Symbol":"600666","Side":"BUY","Price":6.382239458258879,"Quantity":1577,"Reason":"ALPHA  rank#1  score=+0.3873  alloc=¥10000","Timestamp":1776050274477}
+{"Symbol":"600345","Side":"BUY","Price":54.18774769166688,"Quantity":185,"Reason":"ALPHA  rank#2  score=+0.3754  alloc=¥10000","Timestamp":1776050574466}
+{"Symbol":"000534","Side":"BUY","Price":46.08386533249167,"Quantity":218,"Reason":"ALPHA  rank#2  score=+0.4650  alloc=¥10000","Timestamp":1776057774659}
+{"Symbol":"000890","Side":"BUY","Price":12.903271913783584,"Quantity":392,"Reason":"ALPHA  rank#1  score=+0.3283  alloc=¥10000","Timestamp":1776060474933}
+{"Symbol":"002667","Side":"SELL","Price":27.528742857091583,"Quantity":291,"Reason":"TRAIL_STOP   avg= 26.2819  max= 28.4400  now= 27.8600  pnl=+6.00%  sell=291/291","Timestamp":1776130374564}
+{"Symbol":"002432","Side":"SELL","Price":83.48894820840026,"Quantity":113,"Reason":"STOP_LOSS    avg= 89.0686  max= 89.0686  now= 84.2100  pnl=-5.45%  sell=113/113","Timestamp":1776130674832}
+{"Symbol":"603052","Side":"SELL","Price":69.60987058672212,"Quantity":142,"Reason":"ROTATION  avg= 70.8979  now= 70.6500  pnl=-0.35%  sell=142/142","Timestamp":1776130674720}
+{"Symbol":"600345","Side":"SELL","Price":52.11729352805408,"Quantity":185,"Reason":"ROTATION  avg= 54.1877  now= 52.7300  pnl=-2.69%  sell=185/185","Timestamp":1776130674553}
+{"Symbol":"000815","Side":"BUY","Price":20.924513928032148,"Quantity":305,"Reason":"ALPHA  rank#2  score=+0.3621  alloc=¥10000","Timestamp":1776130674505}
+{"Symbol":"000534","Side":"SELL","Price":43.25910628043363,"Quantity":218,"Reason":"STOP_LOSS    avg= 46.0839  max= 46.2800  now= 43.7200  pnl=-5.13%  sell=218/218","Timestamp":1776131874390}
+{"Symbol":"002432","Side":"BUY","Price":83.34376720021265,"Quantity":120,"Reason":"ALPHA  rank#1  score=+0.4697  alloc=¥10000","Timestamp":1776132174776}
+{"Symbol":"000890","Side":"SELL","Price":12.107796185745991,"Quantity":392,"Reason":"STOP_LOSS    avg= 12.9033  max= 13.1500  now= 12.2200  pnl=-5.30%  sell=392/392","Timestamp":1776133674584}
+{"Symbol":"002667","Side":"BUY","Price":28.796729217432965,"Quantity":350,"Reason":"ALPHA  rank#1  score=+0.4609  alloc=¥10000","Timestamp":1776134574561}
+{"Symbol":"002432","Side":"SELL","Price":78.1622379025424,"Quantity":120,"Reason":"STOP_LOSS    avg= 83.3438  max= 83.3438  now= 78.6600  pnl=-5.62%  sell=120/120","Timestamp":1776136525734}
+{"Symbol":"603256","Side":"BUY","Price":98.90084126833197,"Quantity":101,"Reason":"ALPHA  rank#1  score=+0.4646  alloc=¥10000","Timestamp":1776146725152}
+{"Symbol":"000973","Side":"BUY","Price":20.58590058438591,"Quantity":490,"Reason":"ALPHA  rank#1  score=+0.4045  alloc=¥10000","Timestamp":1776217225854}
+{"Symbol":"600605","Side":"BUY","Price":31.708188742083927,"Quantity":318,"Reason":"ALPHA  rank#2  score=+0.3989  alloc=¥10000","Timestamp":1776217225775}
+{"Symbol":"603688","Side":"BUY","Price":53.864054807199096,"Quantity":186,"Reason":"ALPHA  rank#1  score=+0.5427  alloc=¥10000","Timestamp":1776218725906}
+{"Symbol":"000534","Side":"BUY","Price":42.29216104326133,"Quantity":62,"Reason":"ALPHA  rank#1  score=+0.4213  alloc=¥3233","Timestamp":1776222025872}
+{"Symbol":"002432","Side":"BUY","Price":76.82792202874768,"Quantity":7,"Reason":"ALPHA  rank#1  score=+0.4587  alloc=¥611","Timestamp":1776222625582}
+{"Symbol":"001267","Side":"SELL","Price":39.663046070442554,"Quantity":232,"Reason":"STOP_LOSS    avg= 43.3772  max= 44.6000  now= 40.2000  pnl=-7.32%  sell=232/232","Timestamp":1776303124121}
+{"Symbol":"002432","Side":"SELL","Price":71.99904793648054,"Quantity":7,"Reason":"STOP_LOSS    avg= 76.8279  max= 76.8279  now= 72.5000  pnl=-5.63%  sell=7/7","Timestamp":1776303724353}
+{"Symbol":"603061","Side":"BUY","Price":237.32681467013896,"Quantity":42,"Reason":"ALPHA  rank#1  score=+0.4317  alloc=¥10000","Timestamp":1776304324415}
+{"Symbol":"002192","Side":"BUY","Price":79.28676994550635,"Quantity":8,"Reason":"ALPHA  rank#1  score=+0.4530  alloc=¥707","Timestamp":1776307324250}
+{"Symbol":"002192","Side":"SELL","Price":84.0331079146631,"Quantity":6,"Reason":"TRAIL_STOP   avg= 79.2868  max= 88.0200  now= 84.5400  pnl=+6.63%  sell=8/8","Timestamp":1776391260485}
+{"Symbol":"002192","Side":"SELL","Price":84.52976544201792,"Quantity":2,"Reason":"TRAIL_STOP   avg= 79.2868  max= 88.0200  now= 85.0000  pnl=+7.21%  sell=2/2","Timestamp":1776391560679}
+{"Symbol":"002432","Side":"BUY","Price":77.04410249313355,"Quantity":9,"Reason":"ALPHA  rank#1  score=+0.4010  alloc=¥707","Timestamp":1776395760711}
+{"Symbol":"000973","Side":"SELL","Price":18.464650970580685,"Quantity":490,"Reason":"STOP_LOSS    avg= 20.5859  max= 20.5859  now= 18.5800  pnl=-9.74%  sell=490/490","Timestamp":1776402061040}
+{"Symbol":"603256","Side":"SELL","Price":104.83761420940928,"Quantity":101,"Reason":"TRAIL_STOP   avg= 98.9008  max=107.8700  now=105.5000  pnl=+6.67%  sell=101/101","Timestamp":1776405960768}
+{"Symbol":"603256","Side":"BUY","Price":105.77536901126714,"Quantity":54,"Reason":"ALPHA  rank#1  score=+0.5033  alloc=¥10000","Timestamp":1776408060815}
+{"Symbol":"600666","Side":"SELL","Price":7.153154950076627,"Quantity":1577,"Reason":"TRAIL_STOP   avg=  6.3822  max=  7.4800  now=  7.2000  pnl=+12.81%  sell=1577/1577","Timestamp":1776650383467}
+{"Symbol":"002428","Side":"BUY","Price":68.61348008468829,"Quantity":110,"Reason":"ALPHA  rank#1  score=+0.4934  alloc=¥10000","Timestamp":1776661483542}
+{"Symbol":"600666","Side":"BUY","Price":7.164482178139541,"Quantity":1402,"Reason":"ALPHA  rank#1  score=+0.4483  alloc=¥10000","Timestamp":1776663583640}
+{"Symbol":"600666","Side":"SELL","Price":6.687938352193242,"Quantity":1402,"Reason":"STOP_LOSS    avg=  7.1645  max=  7.1800  now=  6.7500  pnl=-5.79%  sell=1402/1402","Timestamp":1776735883869}
+{"Symbol":"002192","Side":"BUY","Price":81.96600502869255,"Quantity":122,"Reason":"ALPHA  rank#1  score=+0.4606  alloc=¥10000","Timestamp":1776737983745}
+{"Symbol":"002432","Side":"SELL","Price":90.60294892506316,"Quantity":9,"Reason":"TRAIL_STOP   avg= 77.0441  max= 94.7000  now= 91.0800  pnl=+18.22%  sell=9/9","Timestamp":1776908683636}
+{"Symbol":"002428","Side":"SELL","Price":79.1905367744508,"Quantity":110,"Reason":"TRAIL_STOP   avg= 68.6135  max= 82.7600  now= 79.7100  pnl=+16.17%  sell=110/110","Timestamp":1776909283987}
+{"Symbol":"002432","Side":"BUY","Price":87.57103263139912,"Quantity":114,"Reason":"ALPHA  rank#1  score=+0.4899  alloc=¥10000","Timestamp":1776914983684}
+{"Symbol":"000815","Side":"SELL","Price":19.35714591638298,"Quantity":305,"Reason":"STOP_LOSS    avg= 20.9245  max= 22.4800  now= 19.5400  pnl=-6.62%  sell=305/305","Timestamp":1776994596931}
+{"Symbol":"002222","Side":"BUY","Price":92.63155582423933,"Quantity":97,"Reason":"ALPHA  rank#1  score=+0.4162  alloc=¥10000","Timestamp":1776994896977}
+{"Symbol":"000815","Side":"BUY","Price":19.531457841513603,"Quantity":131,"Reason":"ALPHA  rank#1  score=+0.4197  alloc=¥2549","Timestamp":1777008697331}
+{"Symbol":"002667","Side":"SELL","Price":30.471728318502265,"Quantity":350,"Reason":"TRAIL_STOP   avg= 28.7967  max= 31.8100  now= 30.8700  pnl=+7.20%  sell=350/350","Timestamp":1777253797234}
+{"Symbol":"002192","Side":"SELL","Price":90.63962009676334,"Quantity":122,"Reason":"TRAIL_STOP   avg= 81.9660  max= 93.2400  now= 91.2600  pnl=+11.34%  sell=122/122","Timestamp":1777254397076}
+{"Symbol":"002667","Side":"BUY","Price":31.319304539021154,"Quantity":322,"Reason":"ALPHA  rank#1  score=+0.4638  alloc=¥10000","Timestamp":1777254697105}
+{"Symbol":"002428","Side":"BUY","Price":74.77788114820187,"Quantity":134,"Reason":"ALPHA  rank#1  score=+0.4894  alloc=¥9985","Timestamp":1777259197516}
+{"Symbol":"002428","Side":"SELL","Price":69.50076807693561,"Quantity":87,"Reason":"STOP_LOSS    avg= 74.7779  max= 74.7779  now= 69.9600  pnl=-6.44%  sell=134/134","Timestamp":1777340497429}
+{"Symbol":"002428","Side":"SELL","Price":69.66411505929074,"Quantity":37,"Reason":"STOP_LOSS    avg= 74.7779  max= 74.7779  now= 70.1500  pnl=-6.19%  sell=47/47","Timestamp":1777340797253}
+{"Symbol":"002428","Side":"SELL","Price":69.71438595843797,"Quantity":10,"Reason":"STOP_LOSS    avg= 74.7779  max= 74.7779  now= 70.1500  pnl=-6.19%  sell=10/10","Timestamp":1777341097635}
+{"Symbol":"600666","Side":"BUY","Price":5.605796420409421,"Quantity":1795,"Reason":"ALPHA  rank#1  score=+0.3378  alloc=¥9985","Timestamp":1777352797444}
+{"Symbol":"002432","Side":"SELL","Price":74.947027431565,"Quantity":114,"Reason":"STOP_LOSS    avg= 87.5710  max= 87.5710  now= 75.6400  pnl=-13.62%  sell=114/114","Timestamp":1777513298104}
+{"Symbol":"002432","Side":"BUY","Price":75.43698407921397,"Quantity":132,"Reason":"ALPHA  rank#1  score=+0.4808  alloc=¥9905","Timestamp":1777517197807}
+{"Symbol":"000815","Side":"SELL","Price":22.335504844709998,"Quantity":91,"Reason":"TRAIL_STOP   avg= 19.5315  max= 22.9400  now= 22.4700  pnl=+15.05%  sell=131/131","Timestamp":1778119744612}
+{"Symbol":"000815","Side":"SELL","Price":22.298179262246865,"Quantity":40,"Reason":"TRAIL_STOP   avg= 19.5315  max= 22.9400  now= 22.4300  pnl=+14.84%  sell=40/40","Timestamp":1778120645138}
+{"Symbol":"600113","Side":"BUY","Price":49.54007354050083,"Quantity":50,"Reason":"ALPHA  rank#1  score=+0.4878  alloc=¥2506","Timestamp":1778120645329}
+{"Symbol":"603688","Side":"SELL","Price":65.52198124133109,"Quantity":186,"Reason":"TRAIL_STOP   avg= 53.8641  max= 67.4400  now= 66.0000  pnl=+22.53%  sell=186/186","Timestamp":1778209217651}
+{"Symbol":"603688","Side":"BUY","Price":66.54879311563421,"Quantity":151,"Reason":"ALPHA  rank#1  score=+0.4646  alloc=¥10000","Timestamp":1778220317284}
+{"Symbol":"002667","Side":"SELL","Price":25.615099798935365,"Quantity":40,"Reason":"STOP_LOSS    avg= 31.3193 now= 26.3200 pnl=-15.96%","Timestamp":1778553460526}
+{"Symbol":"000534","Side":"SELL","Price":37.79365766956886,"Quantity":62,"Reason":"STOP_LOSS    avg= 42.2922 now= 38.1000 pnl=-9.91%","Timestamp":1778553460818}
+{"Symbol":"600113","Side":"SELL","Price":43.99578105061728,"Quantity":50,"Reason":"STOP_LOSS    avg= 49.5401 now= 44.3900 pnl=-10.40%","Timestamp":1778553460582}
+{"Symbol":"603256","Side":"SELL","Price":145.5070038305956,"Quantity":54,"Reason":"TAKE_PROFIT  avg=105.7754 now=146.6200 pnl=+38.61%","Timestamp":1778553460414}
+{"Symbol":"002667","Side":"SELL","Price":25.619115349090468,"Quantity":40,"Reason":"STOP_LOSS    avg= 31.3193 now= 26.3200 pnl=-15.96%","Timestamp":1778553760674}
+{"Symbol":"002667","Side":"SELL","Price":25.588862810516307,"Quantity":40,"Reason":"STOP_LOSS    avg= 31.3193 now= 26.3200 pnl=-15.96%","Timestamp":1778554060829}
+{"Symbol":"002667","Side":"SELL","Price":25.602942876263253,"Quantity":40,"Reason":"STOP_LOSS    avg= 31.3193 now= 26.3200 pnl=-15.96%","Timestamp":1778554360458}
+{"Symbol":"002667","Side":"SELL","Price":25.578925281748454,"Quantity":40,"Reason":"STOP_LOSS    avg= 31.3193 now= 26.3200 pnl=-15.96%","Timestamp":1778554660346}
+{"Symbol":"002667","Side":"SELL","Price":25.57578974606493,"Quantity":41,"Reason":"STOP_LOSS    avg= 31.3193 now= 26.3200 pnl=-15.96%","Timestamp":1778554960665}
+{"Symbol":"002667","Side":"SELL","Price":25.566098443200346,"Quantity":53,"Reason":"STOP_LOSS    avg= 31.3193 now= 26.3200 pnl=-15.96%","Timestamp":1778555260445}
+{"Symbol":"002667","Side":"SELL","Price":25.774791037232337,"Quantity":28,"Reason":"STOP_LOSS    avg= 31.3193 now= 26.3200 pnl=-15.96%","Timestamp":1778555560656}
+{"Symbol":"001267","Side":"BUY","Price":62.75404134710815,"Quantity":87,"Reason":"ALPHA  rank#1  score=+0.4558  alloc=¥10000","Timestamp":1778556460760}
+{"Symbol":"603061","Side":"SELL","Price":308.2369977541173,"Quantity":42,"Reason":"TAKE_PROFIT  avg=237.3268 now=310.9200 pnl=+31.01%","Timestamp":1778562460537}
+{"Symbol":"002222","Side":"SELL","Price":113.55490998511031,"Quantity":97,"Reason":"TRAIL_STOP   avg= 92.6316 now=114.2100 pnl=+23.29%","Timestamp":1778564860766}
+{"Symbol":"002980","Side":"BUY","Price":83.66123780138922,"Quantity":120,"Reason":"ALPHA  rank#2  score=+0.3396  alloc=¥10000","Timestamp":1778564860537}
+{"Symbol":"002428","Side":"BUY","Price":97.96920192096755,"Quantity":102,"Reason":"ALPHA  rank#2  score=+0.4113  alloc=¥10000","Timestamp":1778565760378}
+{"Symbol":"600769","Side":"BUY","Price":21.02760351906263,"Quantity":478,"Reason":"ALPHA  rank#1  score=+0.4025  alloc=¥10000","Timestamp":1778567561533}
+{"Symbol":"002718","Side":"BUY","Price":81.80118531932412,"Quantity":53,"Reason":"ALPHA  rank#1  score=+0.4278  alloc=¥4305","Timestamp":1778569060801}
+{"Symbol":"603688","Side":"SELL","Price":71.9754680015846,"Quantity":151,"Reason":"TRAIL_STOP   avg= 66.5488 now= 72.5200 pnl=+8.97%","Timestamp":1778637760800}
+{"Symbol":"002718","Side":"SELL","Price":76.69510041180318,"Quantity":53,"Reason":"STOP_LOSS    avg= 81.8012 now= 77.5700 pnl=-5.17%","Timestamp":1778639860886}
+{"Symbol":"002181","Side":"BUY","Price":18.10933625970437,"Quantity":241,"Reason":"ALPHA  rank#2  score=+0.4514  alloc=¥4354","Timestamp":1778642560700}
+{"Symbol":"600605","Side":"SELL","Price":33.40927252354148,"Quantity":318,"Reason":"TRAIL_STOP   avg= 31.7082 now= 33.8500 pnl=+6.75%","Timestamp":1778653264924}
+{"Symbol":"600666","Side":"SELL","Price":5.917235850151685,"Quantity":1289,"Reason":"TRAIL_STOP   avg=  5.6058 now=  5.9600 pnl=+6.32%","Timestamp":1778722932074}
+{"Symbol":"603688","Side":"BUY","Price":73.4209225643716,"Quantity":137,"Reason":"ALPHA  rank#2  score=+0.3487  alloc=¥10000","Timestamp":1778722931865}
+{"Symbol":"600666","Side":"SELL","Price":5.909342499034624,"Quantity":506,"Reason":"TRAIL_STOP   avg=  5.6058 now=  5.9500 pnl=+6.14%","Timestamp":1778723232140}
+{"Symbol":"002432","Side":"SELL","Price":81.23722033396785,"Quantity":132,"Reason":"TRAIL_STOP   avg= 75.4370 now= 81.8200 pnl=+8.46%","Timestamp":1778725032444}
+{"Symbol":"002903","Side":"BUY","Price":48.83734099155931,"Quantity":206,"Reason":"ALPHA  rank#1  score=+0.3687  alloc=¥10000","Timestamp":1778725332356}
+{"Symbol":"000890","Side":"BUY","Price":13.169285746103828,"Quantity":766,"Reason":"ALPHA  rank#1  score=+0.3609  alloc=¥10000","Timestamp":1778725932280}
+{"Symbol":"600769","Side":"SELL","Price":22.23446623020683,"Quantity":478,"Reason":"TRAIL_STOP   avg= 21.0276 now= 22.4500 pnl=+6.76%","Timestamp":1778726532249}
+{"Symbol":"000029","Side":"BUY","Price":28.706528979777286,"Quantity":351,"Reason":"ALPHA  rank#1  score=+0.4168  alloc=¥10000","Timestamp":1778739732022}
+{"Symbol":"000890","Side":"SELL","Price":12.176486700538598,"Quantity":766,"Reason":"STOP_LOSS    avg= 13.1693 now= 12.4000 pnl=-5.84%","Timestamp":1778808702727}
+{"Symbol":"001267","Side":"SELL","Price":66.57115486934448,"Quantity":87,"Reason":"TRAIL_STOP   avg= 62.7540 now= 67.1100 pnl=+6.94%","Timestamp":1778808702565}
+{"Symbol":"603688","Side":"SELL","Price":68.8236646993476,"Quantity":137,"Reason":"STOP_LOSS    avg= 73.4209 now= 69.3200 pnl=-5.59%","Timestamp":1778809602573}
+{"Symbol":"002980","Side":"SELL","Price":98.71948888465008,"Quantity":120,"Reason":"TRAIL_STOP   avg= 83.6612 now= 99.4800 pnl=+18.91%","Timestamp":1778809902841}
+{"Symbol":"002428","Side":"SELL","Price":90.52378274931846,"Quantity":95,"Reason":"STOP_LOSS    avg= 97.9692 now= 91.0000 pnl=-7.11%","Timestamp":1778809902738}
+{"Symbol":"002428","Side":"SELL","Price":89.39441149947795,"Quantity":7,"Reason":"STOP_LOSS    avg= 97.9692 now= 90.3500 pnl=-7.78%","Timestamp":1778810202581}
+{"Symbol":"003031","Side":"BUY","Price":154.71431989120185,"Quantity":64,"Reason":"ALPHA  rank#1  score=+0.5980  alloc=¥10000","Timestamp":1778810502614}
+{"Symbol":"002980","Side":"BUY","Price":97.48753130659799,"Quantity":103,"Reason":"ALPHA  rank#1  score=+0.5288  alloc=¥10000","Timestamp":1778810802779}
+{"Symbol":"001267","Side":"BUY","Price":63.820559969699374,"Quantity":157,"Reason":"ALPHA  rank#2  score=+0.4369  alloc=¥10000","Timestamp":1778811102656}
+{"Symbol":"002229","Side":"BUY","Price":18.42626640264044,"Quantity":337,"Reason":"ALPHA  rank#2  score=+0.5221  alloc=¥10000","Timestamp":1778812602430}
+{"Symbol":"002192","Side":"BUY","Price":93.66242256892623,"Quantity":72,"Reason":"ALPHA  rank#1  score=+0.5299  alloc=¥10000","Timestamp":1778814102745}
+{"Symbol":"600666","Side":"BUY","Price":5.71669353334563,"Quantity":1757,"Reason":"ALPHA  rank#1  score=+0.4667  alloc=¥10000","Timestamp":1778825202601}
+{"Symbol":"002229","Side":"SELL","Price":17.37109422830393,"Quantity":337,"Reason":"STOP_LOSS    avg= 18.4263 now= 17.4900 pnl=-5.08%","Timestamp":1779070521204}
+{"Symbol":"002903","Side":"SELL","Price":45.816049045327,"Quantity":153,"Reason":"STOP_LOSS    avg= 48.8373 now= 46.2200 pnl=-5.36%","Timestamp":1779070821779}
+{"Symbol":"002903","Side":"SELL","Price":45.61129111435011,"Quantity":53,"Reason":"STOP_LOSS    avg= 48.8373 now= 45.9800 pnl=-5.85%","Timestamp":1779072267995}
+{"Symbol":"603256","Side":"BUY","Price":132.2146920195708,"Quantity":60,"Reason":"ALPHA  rank#1  score=+0.4980  alloc=¥10000","Timestamp":1779074838616}
+{"Symbol":"002515","Side":"BUY","Price":7.532164809268688,"Quantity":1336,"Reason":"ALPHA  rank#1  score=+0.4771  alloc=¥10000","Timestamp":1779080716113}
+{"Symbol":"002181","Side":"SELL","Price":15.83720435535844,"Quantity":241,"Reason":"STOP_LOSS    avg= 18.1093 now= 15.9500 pnl=-11.92%","Timestamp":1779154322639}
+{"Symbol":"003031","Side":"SELL","Price":167.6781921920064,"Quantity":64,"Reason":"TRAIL_STOP   avg=154.7143 now=169.2100 pnl=+9.37%","Timestamp":1779154622897}
+{"Symbol":"002192","Side":"SELL","Price":87.98614886626923,"Quantity":72,"Reason":"STOP_LOSS    avg= 93.6624 now= 88.7000 pnl=-5.30%","Timestamp":1779154922748}
+{"Symbol":"003031","Side":"BUY","Price":164.9348369076026,"Quantity":60,"Reason":"ALPHA  rank#1  score=+0.5100  alloc=¥10000","Timestamp":1779157622419}
+{"Symbol":"002980","Side":"SELL","Price":102.9537138900935,"Quantity":103,"Reason":"TRAIL_STOP   avg= 97.4875 now=103.6500 pnl=+6.32%","Timestamp":1779158222637}
+{"Symbol":"600714","Side":"BUY","Price":28.500064227112794,"Quantity":353,"Reason":"ALPHA  rank#2  score=+0.4212  alloc=¥10000","Timestamp":1779158222734}
+{"Symbol":"003018","Side":"BUY","Price":67.41135013386403,"Quantity":149,"Reason":"ALPHA  rank#1  score=+0.4118  alloc=¥10000","Timestamp":1779158522731}
+{"Symbol":"002348","Side":"BUY","Price":15.245446429164929,"Quantity":75,"Reason":"ALPHA  rank#1  score=+0.4257  alloc=¥1863","Timestamp":1779158822630}
+{"Symbol":"002348","Side":"SELL","Price":13.8814689166053,"Quantity":75,"Reason":"STOP_LOSS    avg= 15.2454 now= 14.0200 pnl=-8.04%","Timestamp":1779241022574}
+{"Symbol":"600714","Side":"SELL","Price":26.527432544009354,"Quantity":353,"Reason":"STOP_LOSS    avg= 28.5001 now= 26.9600 pnl=-5.40%","Timestamp":1779241022704}
+{"Symbol":"001267","Side":"SELL","Price":60.05486757564314,"Quantity":157,"Reason":"STOP_LOSS    avg= 63.8206 now= 60.5200 pnl=-5.17%","Timestamp":1779241022836}
+{"Symbol":"001270","Side":"BUY","Price":147.9254411558062,"Quantity":68,"Reason":"ALPHA  rank#1  score=+0.4776  alloc=¥10000","Timestamp":1779242522790}
+{"Symbol":"000029","Side":"SELL","Price":26.797524914052513,"Quantity":351,"Reason":"STOP_LOSS    avg= 28.7065 now= 27.0200 pnl=-5.88%","Timestamp":1779242822791}
+{"Symbol":"603256","Side":"SELL","Price":141.42156796487671,"Quantity":60,"Reason":"TRAIL_STOP   avg=132.2147 now=142.2900 pnl=+7.62%","Timestamp":1779244322682}
+{"Symbol":"002428","Side":"BUY","Price":92.27745306689964,"Quantity":108,"Reason":"ALPHA  rank#1  score=+0.5194  alloc=¥10000","Timestamp":1779245822574}
+{"Symbol":"600246","Side":"BUY","Price":14.542137096971528,"Quantity":685,"Reason":"ALPHA  rank#2  score=+0.4023  alloc=¥9928","Timestamp":1779247622448}
+{"Symbol":"002515","Side":"SELL","Price":7.056513623151451,"Quantity":1336,"Reason":"STOP_LOSS    avg=  7.5322 now=  7.1500 pnl=-5.07%","Timestamp":1779328322898}
+{"Symbol":"600714","Side":"BUY","Price":29.003188180547703,"Quantity":347,"Reason":"ALPHA  rank#2  score=+0.6001  alloc=¥10000","Timestamp":1779329522991}
+{"Symbol":"603738","Side":"BUY","Price":49.92237662377941,"Quantity":200,"Reason":"ALPHA  rank#1  score=+0.5091  alloc=¥9965","Timestamp":1779332223041}
+{"Symbol":"600666","Side":"SELL","Price":5.366834044533122,"Quantity":1193,"Reason":"STOP_LOSS    avg=  5.7167 now=  5.4100 pnl=-5.36%","Timestamp":1779339837359}
+{"Symbol":"600666","Side":"SELL","Price":5.39427574400476,"Quantity":564,"Reason":"STOP_LOSS    avg=  5.7167 now=  5.4300 pnl=-5.02%","Timestamp":1779340994966}
+{"Symbol":"002348","Side":"BUY","Price":13.882927574236355,"Quantity":725,"Reason":"ALPHA  rank#1  score=+0.4207  alloc=¥10000","Timestamp":1779340994975}
+{"Symbol":"002428","Side":"SELL","Price":86.59977845885571,"Quantity":108,"Reason":"STOP_LOSS    avg= 92.2775 now= 87.0100 pnl=-5.71%","Timestamp":1779343051697}
+{"Symbol":"003031","Side":"SELL","Price":155.50311169142432,"Quantity":60,"Reason":"STOP_LOSS    avg=164.9348 now=156.2700 pnl=-5.25%","Timestamp":1779344561401}
+{"Symbol":"001270","Side":"SELL","Price":137.9613126480653,"Quantity":68,"Reason":"STOP_LOSS    avg=147.9254 now=140.1000 pnl=-5.29%","Timestamp":1779413418126}
+{"Symbol":"002348","Side":"SELL","Price":12.95295143082334,"Quantity":725,"Reason":"STOP_LOSS    avg= 13.8829 now= 13.1300 pnl=-5.42%","Timestamp":1779414498025}
+{"Symbol":"003018","Side":"SELL","Price":63.25259651495289,"Quantity":138,"Reason":"STOP_LOSS    avg= 67.4114 now= 63.8600 pnl=-5.27%","Timestamp":1779414738750}
+{"Symbol":"603986","Side":"BUY","Price":454.4238966501771,"Quantity":22,"Reason":"ALPHA  rank#1  score=+0.4826  alloc=¥10000","Timestamp":1779414739131}
+{"Symbol":"003018","Side":"SELL","Price":62.021718327939354,"Quantity":6,"Reason":"STOP_LOSS    avg= 67.4114 now= 63.1200 pnl=-6.37%","Timestamp":1779415101778}
+{"Symbol":"600769","Side":"BUY","Price":17.92049369176843,"Quantity":562,"Reason":"ALPHA  rank#2  score=+0.4411  alloc=¥10000","Timestamp":1779415101857}
+{"Symbol":"003018","Side":"SELL","Price":62.375930593652065,"Quantity":5,"Reason":"STOP_LOSS    avg= 67.4114 now= 63.6000 pnl=-5.65%","Timestamp":1779415217975}
+{"Symbol":"600246","Side":"SELL","Price":15.530994045308375,"Quantity":685,"Reason":"TRAIL_STOP   avg= 14.5421 now= 15.6100 pnl=+7.34%","Timestamp":1779415338035}
+{"Symbol":"002428","Side":"BUY","Price":87.93128479505698,"Quantity":114,"Reason":"ALPHA  rank#2  score=+0.4028  alloc=¥10000","Timestamp":1779415458512}
+{"Symbol":"003018","Side":"BUY","Price":65.08644326899208,"Quantity":154,"Reason":"ALPHA  rank#2  score=+0.3773  alloc=¥10000","Timestamp":1779418097825}
+{"Symbol":"603459","Side":"BUY","Price":101.55891519148149,"Quantity":97,"Reason":"ALPHA  rank#2  score=+0.4166  alloc=¥9835","Timestamp":1779419778034}
+{"Symbol":"603407","Side":"BUY","Price":63.88333445904704,"Quantity":91,"Reason":"ALPHA  rank#1  score=+0.3754  alloc=¥9984","Timestamp":1779420137978}
+{"Symbol":"000417","Side":"BUY","Price":10.506720909439487,"Quantity":359,"Reason":"ALPHA  rank#1  score=+0.3257  alloc=¥4171","Timestamp":1779673649138}
+{"Symbol":"603115","Side":"BUY","Price":115.06530587964373,"Quantity":3,"Reason":"ALPHA  rank#1  score=+0.5096  alloc=¥399","Timestamp":1779674129524}
+{"Symbol":"600769","Side":"SELL","Price":16.811753558677417,"Quantity":562,"Reason":"STOP_LOSS    avg= 17.9205 now= 16.9500 pnl=-5.42%","Timestamp":1779674370354}
+{"Symbol":"603186","Side":"BUY","Price":121.59295548835642,"Quantity":82,"Reason":"ALPHA  rank#1  score=+0.4469  alloc=¥10000","Timestamp":1779674491288}
+{"Symbol":"603407","Side":"SELL","Price":59.7149981516854,"Quantity":91,"Reason":"STOP_LOSS    avg= 63.8833 now= 60.3500 pnl=-5.53%","Timestamp":1779674729444}
+{"Symbol":"002169","Side":"BUY","Price":18.587893921489147,"Quantity":323,"Reason":"ALPHA  rank#1  score=+0.4969  alloc=¥5968","Timestamp":1779675689848}
+{"Symbol":"002428","Side":"SELL","Price":89.9587744320837,"Quantity":114,"Reason":"ROTATION_CONFIRMED","Timestamp":1779677489709}
+{"Symbol":"002859","Side":"BUY","Price":64.84657416052053,"Quantity":154,"Reason":"ALPHA  rank#1  score=+0.4135  alloc=¥9988","Timestamp":1779679649510}
+{"Symbol":"603459","Side":"SELL","Price":107.10967174888894,"Quantity":97,"Reason":"TRAIL_STOP   avg=101.5589 now=107.6800 pnl=+6.03%","Timestamp":1779685649288}
+{"Symbol":"605376","Side":"BUY","Price":167.33775807092692,"Quantity":48,"Reason":"ALPHA  rank#1  score=+0.4019  alloc=¥9853","Timestamp":1779685769950}
+{"Symbol":"603738","Side":"SELL","Price":48.75873553463553,"Quantity":139,"Reason":"ROTATION_CONFIRMED","Timestamp":1779689489258}
+{"Symbol":"603738","Side":"SELL","Price":48.64309736698124,"Quantity":36,"Reason":"ROTATION_CONFIRMED","Timestamp":1779689729745}
+{"Symbol":"000417","Side":"SELL","Price":9.240963520423737,"Quantity":359,"Reason":"STOP_LOSS    avg= 10.5067 now=  9.3200 pnl=-11.29%","Timestamp":1779759090214}
+{"Symbol":"600714","Side":"SELL","Price":30.784045103925067,"Quantity":306,"Reason":"TRAIL_STOP   avg= 29.0032 now= 31.2200 pnl=+7.64%","Timestamp":1779759210028}
+{"Symbol":"603115","Side":"SELL","Price":103.94252947646622,"Quantity":2,"Reason":"STOP_LOSS    avg=115.0653 now=107.0000 pnl=-7.01%","Timestamp":1779759329676}
+{"Symbol":"000636","Side":"BUY","Price":42.76084671858792,"Quantity":234,"Reason":"ALPHA  rank#1  score=+0.3477  alloc=¥10000","Timestamp":1779759329695}
+{"Symbol":"600714","Side":"SELL","Price":31.2287998658639,"Quantity":31,"Reason":"TRAIL_STOP   avg= 29.0032 now= 31.5800 pnl=+8.88%","Timestamp":1779759449844}
+{"Symbol":"603115","Side":"SELL","Price":101.58280936301233,"Quantity":1,"Reason":"STOP_LOSS    avg=115.0653 now=107.0000 pnl=-7.01%","Timestamp":1779759450106}
+{"Symbol":"603986","Side":"SELL","Price":495.1963631862735,"Quantity":22,"Reason":"TRAIL_STOP   avg=454.4239 now=497.7700 pnl=+9.54%","Timestamp":1779759569430}
+{"Symbol":"605111","Side":"BUY","Price":62.23175646472312,"Quantity":161,"Reason":"ALPHA  rank#1  score=+0.5623  alloc=¥10000","Timestamp":1779759930158}
+{"Symbol":"603986","Side":"BUY","Price":497.5602438776905,"Quantity":20,"Reason":"ALPHA  rank#1  score=+0.4582  alloc=¥10000","Timestamp":1779760169787}
+{"Symbol":"603738","Side":"SELL","Price":46.599887059547925,"Quantity":25,"Reason":"STOP_LOSS    avg= 49.9224 now= 47.0600 pnl=-5.73%","Timestamp":1779761130024}
+{"Symbol":"002980","Side":"BUY","Price":121.89077837185592,"Quantity":47,"Reason":"ALPHA  rank#1  score=+0.3517  alloc=¥5717","Timestamp":1779761129989}
+{"Symbol":"605376","Side":"SELL","Price":157.70027957918708,"Quantity":29,"Reason":"STOP_LOSS    avg=167.3378 now=158.7500 pnl=-5.13%","Timestamp":1779763529789}
+{"Symbol":"605376","Side":"SELL","Price":157.50643519770745,"Quantity":19,"Reason":"STOP_LOSS    avg=167.3378 now=158.5000 pnl=-5.28%","Timestamp":1779763649256}
+{"Symbol":"605566","Side":"BUY","Price":43.654749927217644,"Quantity":99,"Reason":"ALPHA  rank#1  score=+0.4091  alloc=¥8020","Timestamp":1779763889768}
+{"Symbol":"605566","Side":"SELL","Price":41.11662231577877,"Quantity":99,"Reason":"STOP_LOSS    avg= 43.6547 now= 41.4200 pnl=-5.12%","Timestamp":1779764161534}
+{"Symbol":"001259","Side":"BUY","Price":73.65636871636981,"Quantity":109,"Reason":"ALPHA  rank#1  score=+0.4233  alloc=¥8020","Timestamp":1779764281672}
+{"Symbol":"600714","Side":"SELL","Price":31.771826926455695,"Quantity":10,"Reason":"TRAIL_STOP   avg= 29.0032 now= 32.3700 pnl=+11.61%","Timestamp":1779773308672}
+{"Symbol":"600584","Side":"BUY","Price":85.43890250641958,"Quantity":3,"Reason":"ALPHA  rank#1  score=+0.3479  alloc=¥282","Timestamp":1779773663556}
+{"Symbol":"603186","Side":"SELL","Price":132.02678173989224,"Quantity":59,"Reason":"TRAIL_STOP   avg=121.5930 now=132.6100 pnl=+9.06%","Timestamp":1779774261236}
+{"Symbol":"603186","Side":"SELL","Price":131.47228935963338,"Quantity":16,"Reason":"TRAIL_STOP   avg=121.5930 now=132.2300 pnl=+8.75%","Timestamp":1779774390303}
+{"Symbol":"603186","Side":"SELL","Price":129.81507767329845,"Quantity":82,"Reason":"TRAIL_STOP   avg=121.5930 now=130.7000 pnl=+7.49%","Timestamp":1779775703574}
+{"Symbol":"600584","Side":"BUY","Price":83.22840790343315,"Quantity":120,"Reason":"ALPHA  rank#1  score=+0.3581  alloc=¥9962","Timestamp":1779775703450}
+{"Symbol":"603186","Side":"SELL","Price":129.4116280376702,"Quantity":7,"Reason":"TRAIL_STOP   avg=121.5930 now=130.7000 pnl=+7.49%","Timestamp":1779775705636}
+{"Symbol":"002980","Side":"SELL","Price":114.72753281878413,"Quantity":47,"Reason":"STOP_LOSS    avg=121.8908 now=115.2200 pnl=-5.47%","Timestamp":1779776181437}
+{"Symbol":"002980","Side":"SELL","Price":114.56347067467593,"Quantity":36,"Reason":"STOP_LOSS    avg=121.8908 now=115.2200 pnl=-5.47%","Timestamp":1779776182099}
+{"Symbol":"600714","Side":"SELL","Price":30.843204656660337,"Quantity":10,"Reason":"TRAIL_STOP   avg= 29.0032 now= 31.4800 pnl=+8.54%","Timestamp":1779776302314}
+{"Symbol":"002980","Side":"SELL","Price":114.25526609818763,"Quantity":11,"Reason":"STOP_LOSS    avg=121.8908 now=115.2200 pnl=-5.47%","Timestamp":1779776302601}

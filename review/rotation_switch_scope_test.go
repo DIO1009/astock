@@ -42,14 +42,17 @@ func TestStartScriptPreservesRotationEnv(t *testing.T) {
 	if !strings.Contains(content, "export ASTOCK_ROTATION_ENABLED") {
 		t.Fatalf("scripts/start.sh must export ASTOCK_ROTATION_ENABLED")
 	}
-	if strings.Contains(content, "exec go run ./cmd/paper") {
-		t.Fatalf("scripts/start.sh must not exec go run ./cmd/paper; it should start in the background")
+	if strings.Contains(content, "go run ./cmd/paper") {
+		t.Fatalf("scripts/start.sh must not use go run ./cmd/paper; it should run the compiled binary")
 	}
-	if !strings.Contains(content, "nohup go run ./cmd/paper") {
-		t.Fatalf("scripts/start.sh must use nohup go run ./cmd/paper")
+	if !strings.Contains(content, "go build") || !strings.Contains(content, "bin/paper_trader") {
+		t.Fatalf("scripts/start.sh must compile to bin/paper_trader via go build")
 	}
-	if !strings.Contains(content, "scripts/pids/paper_trader.pid") {
-		t.Fatalf("scripts/start.sh must write scripts/pids/paper_trader.pid")
+	if !strings.Contains(content, "caffeinate") {
+		t.Fatalf("scripts/start.sh must wrap the trader with caffeinate for sleep/network keep-alive")
+	}
+	if !strings.Contains(content, "scripts/pids") {
+		t.Fatalf("scripts/start.sh must write PID to scripts/pids")
 	}
 	if !strings.Contains(content, "logs") {
 		t.Fatalf("scripts/start.sh must use logs")

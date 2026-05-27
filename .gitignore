@@ -1,0 +1,8 @@
+.cuneim/*
+!.cuneim/targets.json
+*/.cuneim/*
+!*/.cuneim/targets.json
+.gocache/*
+dashboard/frontend/node_modules/*
+reports/*
+logs/*
