@@ -86,15 +86,36 @@ echo "▶ 构建前端..."
 FRONTEND_DIR="${REPO_ROOT}/dashboard/frontend"
 if ! command -v npm >/dev/null 2>&1; then
   echo "  [WARN] 未找到 npm，跳过前端构建（使用现有 dist/）"
-elif [[ ! -d "${FRONTEND_DIR}" ]]; then
-  echo "  [WARN] 未找到 ${FRONTEND_DIR}，跳过前端构建"
+elif ! command -v node >/dev/null 2>&1; then
+  echo "  [ERR] 未找到 node。前端构建需要 Node.js ≥ 18"
+  echo "        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -"
+  echo "        sudo apt install -y nodejs"
+  exit 1
 else
-  (cd "${FRONTEND_DIR}" && npm install --silent && npm run build)
-  echo "  ✓ 前端构建完成 → dashboard/frontend/dist/"
+  NODE_MAJOR="$(node -p "process.versions.node.split('.')[0]")"
+  if [[ "${NODE_MAJOR}" -lt 18 ]]; then
+    echo "  [ERR] Node.js 版本过旧: $(node -v)，TypeScript/Vite 需要 ≥ 18"
+    echo "        当前可能是 apt 自带的 nodejs 12，请改用 NodeSource 20.x："
+    echo "        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -"
+    echo "        sudo apt install -y nodejs"
+    echo "        cd dashboard/frontend && rm -rf node_modules && npm install && npm run build"
+    exit 1
+  fi
+  if [[ ! -d "${FRONTEND_DIR}" ]]; then
+    echo "  [WARN] 未找到 ${FRONTEND_DIR}，跳过前端构建"
+  else
+    (cd "${FRONTEND_DIR}" && npm install --silent && npm run build)
+    echo "  ✓ 前端构建完成 → dashboard/frontend/dist/"
+  fi
 fi
 
 # ── 编译 Go 后端 ──────────────────────────────────────────────────────────────
 echo "▶ 编译 Go 后端..."
+# 国内服务器 proxy.golang.org 常超时
+: "${GOPROXY:=https://goproxy.cn,direct}"
+: "${GOSUMDB:=sum.golang.google.cn}"
+export GOPROXY GOSUMDB
+echo "  Go 模块代理: ${GOPROXY}"
 BIN="${REPO_ROOT}/bin/paper_trader"
 go build -o "$BIN" ./cmd/paper
 echo "  ✓ 编译完成 → bin/paper_trader"
