@@ -17,6 +17,7 @@ package position
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -83,14 +84,18 @@ func (m *Manager) SaveState(path string) error {
 // position book.  It is safe to call on a freshly constructed (empty)
 // Manager.
 //
-// If the file does not exist, LoadState returns nil (considered a clean start).
-// If the file is present but malformed, an error is returned.
+// todaySeq is the current trading-day sequence number from calendar.TradeDaySeq.
+// SellableQty is reconciled on load using BuyTradeDay:
+//   - BuyTradeDay >= todaySeq  →  SellableQty = 0   (same-day buy, T+1 locked)
+//   - BuyTradeDay  < todaySeq  →  SellableQty = Quantity (prior day, fully sellable)
 //
-// Positions loaded from disk are merged into the current book using the
-// same semantics as ApplyTrade(BUY): existing positions are overwritten
-// (direct insert, not averaged) because the saved state is already the
-// authoritative weighted average.
-func (m *Manager) LoadState(path string) error {
+// The value stored in the snapshot file is intentionally ignored – only
+// BuyTradeDay is trusted, so stale or corrupted SellableQty values can
+// never cause an illegal same-day sell.
+//
+// If the file does not exist, LoadState returns nil (clean start).
+// If the file is present but malformed, an error is returned.
+func (m *Manager) LoadState(path string, todaySeq int64) error {
 	data, err := os.ReadFile(path)
 	if os.IsNotExist(err) {
 		return nil // no saved state – clean start
@@ -108,12 +113,16 @@ func (m *Manager) LoadState(path string) error {
 	defer m.mu.Unlock()
 	for _, p := range state.Positions {
 		cp := p
-		// Backward-compat: snapshot saved before T+1 feature has SellableQty=0.
-		// Treat these as already-unlocked positions (they were buyable before the
-		// feature was introduced, so we grant full sellability on restore).
-		if cp.SellableQty == 0 && cp.Quantity > 0 {
-			cp.SellableQty = cp.Quantity
+		// Reconcile T+1: derive SellableQty purely from BuyTradeDay.
+		// This makes the result deterministic regardless of what was
+		// written to the snapshot file.
+		if cp.BuyTradeDay >= todaySeq {
+			cp.SellableQty = 0 // same-day buy (or future – treat as locked)
+		} else {
+			cp.SellableQty = cp.Quantity // prior trading day, fully unlocked
 		}
+		log.Printf("[LoadState] %-8s  qty=%d  sellable=%d  buyDay=%d  today=%d",
+			cp.Symbol, cp.Quantity, cp.SellableQty, cp.BuyTradeDay, todaySeq)
 		m.positions[p.Symbol] = &cp
 	}
 	return nil

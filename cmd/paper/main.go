@@ -193,8 +193,12 @@ func main() {
 		TrailDrop:     0.02,
 	})
 
+	// ── 交易日历（提前初始化，LoadState 需要今日序号做 T+1 reconcile）──────────
+	tradingCal := calendar.New()
+	todayTradeDaySeq := tradingCal.TradeDaySeq(time.Now())
+
 	// ── Feature 6: 启动时加载上次持仓快照 ────────────────────────────────────
-	if err := posMgr.LoadState(positionStatePath); err != nil {
+	if err := posMgr.LoadState(positionStatePath, todayTradeDaySeq); err != nil {
 		log.Fatalf("[Paper] 加载持仓快照失败: %v", err)
 	}
 	if restored := posMgr.AllPositions(); len(restored) > 0 {
@@ -599,7 +603,7 @@ func main() {
 	eng.SetMonitor(mon)
 
 	// ── T+1 交易日历（A 股节假日 2020-2030）────────────────────────────────────
-	eng.SetCalendar(calendar.New())
+	eng.SetCalendar(tradingCal)
 
 	// ── Feature 6: 注册 SafetyGuard ──────────────────────────────────────────
 	eng.SetSafetyGuard(safetyGuard)
