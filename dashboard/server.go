@@ -157,8 +157,8 @@ func (s *Server) OnTick(equity float64, report core.PerformanceReport, positions
 		Timestamp:       time.Now().UnixMilli(),
 		Equity:          equityCopy,
 		Alerts:          alertsCopy,
-		Account:         s.buildAccount(equity, report, positions, quotes, todayOpen),
-		Positions:       s.buildPositions(positions, quotes, report),
+		Account:         s.buildAccount(equity, report, positions, quotes, todayOpen, nil),
+		Positions:       s.buildPositions(positions, quotes, report, nil),
 		PositionHistory: s.buildPositionHistory(),
 		Trades:          s.buildTrades(),
 		Safety:          s.buildSafety(),
@@ -178,7 +178,7 @@ func (s *Server) OnTick(equity float64, report core.PerformanceReport, positions
 		s.dbWriter.WriteEquityPoint(store.EquityRow{Timestamp: now, Equity: equity, Drawdown: dd, Cash: snap.Account.Cash, PositionValue: snap.Account.InvestedValue})
 		posRows := make([]store.PosRow, 0, len(positions))
 		for _, p := range positions {
-			cur := currentPrice(p, quotes)
+			cur := currentPrice(p, quotes, nil)
 			pnl := 0.0
 			if p.AvgPrice > 0 {
 				pnl = (cur - p.AvgPrice) / p.AvgPrice * 100
@@ -205,6 +205,11 @@ func (s *Server) OnQuoteRefresh(equity float64, report core.PerformanceReport, p
 	lastSnap := s.lastSnap
 	s.mu.RUnlock()
 
+	if len(positions) > 0 && allHeldQuotesMissing(positions, quotes) && lastSnap.Timestamp > 0 {
+		return
+	}
+
+	lastPrices := lastPriceBySymbol(lastSnap.Positions)
 	positionHistory, trades := lastSnap.PositionHistory, lastSnap.Trades
 	safetyInfo, riskInfo := lastSnap.Safety, lastSnap.Risk
 	execution, strategies := lastSnap.Execution, lastSnap.Strategies
@@ -224,8 +229,8 @@ func (s *Server) OnQuoteRefresh(equity float64, report core.PerformanceReport, p
 		Timestamp:       time.Now().UnixMilli(),
 		Equity:          equityCopy,
 		Alerts:          alertsCopy,
-		Account:         s.buildAccount(equity, report, positions, quotes, todayOpen),
-		Positions:       s.buildPositions(positions, quotes, report),
+		Account:         s.buildAccount(equity, report, positions, quotes, todayOpen, lastPrices),
+		Positions:       s.buildPositions(positions, quotes, report, lastPrices),
 		PositionHistory: positionHistory,
 		Trades:          trades,
 		Safety:          safetyInfo,
@@ -436,14 +441,14 @@ func (s *Server) pushSnapshot(snap Snapshot) {
 	}
 }
 
-func (s *Server) buildAccount(equity float64, report core.PerformanceReport, positions []core.Position, quotes map[string]*core.Quote, todayOpen float64) AccountInfo {
+func (s *Server) buildAccount(equity float64, report core.PerformanceReport, positions []core.Position, quotes map[string]*core.Quote, todayOpen float64, lastPrices map[string]float64) AccountInfo {
 	cash := 0.0
 	if s.perfTracker != nil {
 		cash = s.perfTracker.Cash()
 	}
 	invested := 0.0
 	for _, p := range positions {
-		invested += currentPrice(p, quotes) * float64(p.Quantity)
+		invested += currentPrice(p, quotes, lastPrices) * float64(p.Quantity)
 	}
 	posPct, todayRet := 0.0, 0.0
 	if equity > 0 {
@@ -471,14 +476,14 @@ func (s *Server) buildAccount(equity float64, report core.PerformanceReport, pos
 	return AccountInfo{TotalEquity: equity, InitialCapital: initialCapital, Cash: cash, InvestedValue: invested, TodayReturnPct: todayRet, TotalReturnPct: totalReturn, CurrentDrawdownPct: curDD, MaxDrawdownPct: report.MaxDrawdown, PositionPct: posPct, RiskLevel: riskLevel, TickCount: report.TickCount, WinRate: report.WinRate, TradeCount: report.TradeCount, ProfitFactor: report.ProfitFactor}
 }
 
-func (s *Server) buildPositions(positions []core.Position, quotes map[string]*core.Quote, _ core.PerformanceReport) []PositionInfo {
+func (s *Server) buildPositions(positions []core.Position, quotes map[string]*core.Quote, _ core.PerformanceReport, lastPrices map[string]float64) []PositionInfo {
 	out := make([]PositionInfo, 0, len(positions))
 	defense := false
 	if s.mon != nil {
 		defense = s.mon.State().RiskLevel >= core.RiskDefense
 	}
 	for _, p := range positions {
-		cur := currentPrice(p, quotes)
+		cur := currentPrice(p, quotes, lastPrices)
 		cost := p.AvgPrice * float64(p.Quantity)
 		pnlPct := 0.0
 		if p.AvgPrice > 0 {
@@ -648,11 +653,35 @@ func (s *Server) buildCandidates(positions []core.Position, quotes map[string]*c
 	return out
 }
 
-func currentPrice(p core.Position, quotes map[string]*core.Quote) float64 {
+func currentPrice(p core.Position, quotes map[string]*core.Quote, lastPrices map[string]float64) float64 {
 	if q, ok := quotes[p.Symbol]; ok && q != nil && q.Price > 0 {
 		return q.Price
 	}
+	if lastPrices != nil {
+		if price, ok := lastPrices[p.Symbol]; ok && price > 0 {
+			return price
+		}
+	}
 	return p.AvgPrice
+}
+
+func allHeldQuotesMissing(positions []core.Position, quotes map[string]*core.Quote) bool {
+	for _, p := range positions {
+		if q, ok := quotes[p.Symbol]; ok && q != nil && q.Price > 0 {
+			return false
+		}
+	}
+	return true
+}
+
+func lastPriceBySymbol(positions []PositionInfo) map[string]float64 {
+	out := make(map[string]float64, len(positions))
+	for _, p := range positions {
+		if p.CurrentPrice > 0 {
+			out[p.Symbol] = p.CurrentPrice
+		}
+	}
+	return out
 }
 
 func exitReasonCN(reason string) string {

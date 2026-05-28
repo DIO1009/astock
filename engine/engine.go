@@ -192,15 +192,28 @@ func (e *Engine) refreshDashboardQuotes() {
 		symbols = append(symbols, e.cfg.IndexSymbol)
 	}
 	quotes := e.provider.GetRealtime(symbols)
+	if len(positions) > 0 && !hasAnyValidPositionQuote(positions, quotes) {
+		// 非交易时段行情接口常不可用；不要用成本价回填现价，保留上次有效展示。
+		return
+	}
 	equity := e.perfTracker.Cash()
 	for _, pos := range positions {
-		if q, ok := quotes[pos.Symbol]; ok && q != nil {
+		if q, ok := quotes[pos.Symbol]; ok && q != nil && q.Price > 0 {
 			equity += float64(pos.Quantity) * q.Price
 		} else {
 			equity += float64(pos.Quantity) * pos.AvgPrice
 		}
 	}
 	e.dashboard.OnQuoteRefresh(equity, e.perfTracker.Report(), positions, quotes)
+}
+
+func hasAnyValidPositionQuote(positions []core.Position, quotes map[string]*core.Quote) bool {
+	for _, pos := range positions {
+		if q, ok := quotes[pos.Symbol]; ok && q != nil && q.Price > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func (e *Engine) tradeDaySeq() int64 {

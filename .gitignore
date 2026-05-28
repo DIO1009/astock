@@ -18,3 +18,4 @@ backtest_data.csv
 backups/
 bin/
 scripts/pids
+config/server.env
