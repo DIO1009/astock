@@ -266,6 +266,13 @@ func (e *Engine) processTick() {
 			fetchSymbols = append(fetchSymbols, s)
 		}
 	}
+	sort.SliceStable(fetchSymbols, func(i, j int) bool {
+		pi, pj := posSymSet[fetchSymbols[i]], posSymSet[fetchSymbols[j]]
+		if pi != pj {
+			return pi
+		}
+		return fetchSymbols[i] < fetchSymbols[j]
+	})
 	if e.cfg.IndexSymbol != "" {
 		fetchSymbols = append(fetchSymbols, e.cfg.IndexSymbol)
 	}

@@ -25,12 +25,10 @@ const (
 	indexRequestFields = "f43,f44,f45,f47,f60,f170"
 	histLen           = 21
 	emaAlpha          = 2.0 / (20.0 + 1.0)
-	minInterval       = 1200 * time.Millisecond
 	cacheMaxAge       = 15 * time.Second
 
-	maxRealtimeConcurrency    = 8
-	realtimeFetchAttempts      = 2
-	realtimeRetryBaseDelay     = 120 * time.Millisecond
+	realtimeFetchAttempts      = 3
+	realtimeRetryBaseDelay     = 400 * time.Millisecond
 	cacheFallbackMaxAge       = 60 * time.Second
 	noDataThreshold           = 3
 	maxRealtimePriceMoveRatio = 0.50
@@ -158,9 +156,11 @@ func resolveReturn20d(st *symState, price float64, _ *emData) float64 {
 }
 
 type Provider struct {
-	mu     sync.Mutex
-	states map[string]*symState
-	client *http.Client
+	mu             sync.Mutex
+	states         map[string]*symState
+	client         *http.Client
+	httpLimiterMu  sync.Mutex
+	lastHTTPAt     time.Time
 }
 
 func New() *Provider {
@@ -182,7 +182,23 @@ func New() *Provider {
 
 func (p *Provider) GetRealtime(symbols []string) map[string]*core.Quote {
 	out := make(map[string]*core.Quote, len(symbols))
-	sem := make(chan struct{}, realtimeConcurrencyLimit(len(symbols)))
+	limit := realtimeConcurrencyLimit(len(symbols))
+	if limit <= 1 {
+		for _, sym := range symbols {
+			if sym == "" {
+				continue
+			}
+			q, err := p.getOne(sym)
+			if err != nil {
+				log.Printf("[EastMoney] 获取 %s 实时行情失败: %v", sym, err)
+				continue
+			}
+			out[sym] = q
+		}
+		return out
+	}
+
+	sem := make(chan struct{}, limit)
 	var wg sync.WaitGroup
 	var outMu sync.Mutex
 	for _, sym := range symbols {
@@ -315,7 +331,11 @@ func (p *Provider) fetchRawWithRetry(ctx context.Context, symbol string) (*emDat
 		if attempt+1 >= realtimeFetchAttempts || !isTransientRealtimeError(err) {
 			return nil, err
 		}
-		timer := time.NewTimer(realtimeRetryBaseDelay * time.Duration(attempt+1))
+		backoff := realtimeRetryBaseDelay * time.Duration(attempt+1)
+		if errors.Is(err, io.EOF) {
+			backoff = minInterval
+		}
+		timer := time.NewTimer(backoff)
 		select {
 		case <-ctx.Done():
 			if !timer.Stop() {
@@ -352,6 +372,7 @@ func (p *Provider) fetchRaw(ctx context.Context, symbol string) (*emData, error)
 	if p.client == nil {
 		p.client = New().client
 	}
+	p.throttleHTTP()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
 	if err != nil {
 		return nil, err
@@ -389,14 +410,29 @@ func (p *Provider) fetchRaw(ctx context.Context, symbol string) (*emData, error)
 	return decoded.Data, nil
 }
 
+func (p *Provider) throttleHTTP() {
+	p.httpLimiterMu.Lock()
+	defer p.httpLimiterMu.Unlock()
+	if minInterval <= 0 {
+		p.lastHTTPAt = time.Now()
+		return
+	}
+	wait := minInterval - time.Since(p.lastHTTPAt)
+	if wait > 0 {
+		time.Sleep(wait)
+	}
+	p.lastHTTPAt = time.Now()
+}
+
 func realtimeConcurrencyLimit(symbolCount int) int {
 	if symbolCount <= 0 {
 		return 1
 	}
-	if symbolCount < maxRealtimeConcurrency {
+	limit := maxRealtimeConcurrency
+	if symbolCount < limit {
 		return symbolCount
 	}
-	return maxRealtimeConcurrency
+	return limit
 }
 
 func (p *Provider) stateFor(symbol string) *symState {

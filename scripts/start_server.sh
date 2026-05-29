@@ -30,14 +30,17 @@ fi
 
 # ── 环境变量默认值（server.env 可覆盖；以下为云服务器生产默认）──────────────
 : "${ASTOCK_LIVE_DATA:=1}"
-: "${ASTOCK_TICK_SECONDS:=150}"
+: "${ASTOCK_TICK_SECONDS:=300}"
 : "${ASTOCK_DYNAMIC_SCREENER:=1}"
 : "${ASTOCK_TOP_N:=100}"
 : "${ASTOCK_MAX_POS:=10}"
 : "${ASTOCK_ROTATION_ENABLED:=0}"
+: "${ASTOCK_EM_MIN_INTERVAL_MS:=1000}"
+: "${ASTOCK_EM_MAX_CONCURRENCY:=2}"
 : "${ASTOCK_DB_DSN:=postgres://postgres:dmrxlbol123@127.0.0.1:5432/astock_trade?sslmode=disable}"
 export ASTOCK_LIVE_DATA ASTOCK_TICK_SECONDS ASTOCK_DYNAMIC_SCREENER
 export ASTOCK_TOP_N ASTOCK_MAX_POS ASTOCK_ROTATION_ENABLED ASTOCK_DB_DSN
+export ASTOCK_EM_MIN_INTERVAL_MS ASTOCK_EM_MAX_CONCURRENCY
 
 echo ""
 echo "▶ 运行模式 (Linux 服务器):"
@@ -52,6 +55,7 @@ if [[ "${ASTOCK_TICK_SECONDS}" -ge 60 ]] && (( ASTOCK_TICK_SECONDS % 60 == 0 ));
   TICK_HUMAN="$((ASTOCK_TICK_SECONDS / 60))m"
 fi
 echo "  Tick 间隔: ${TICK_HUMAN}"
+echo "  行情限频:  间隔 ${ASTOCK_EM_MIN_INTERVAL_MS}ms，并发 ${ASTOCK_EM_MAX_CONCURRENCY}"
 
 if [[ "${ASTOCK_DYNAMIC_SCREENER}" == "1" ]]; then
   echo "  选股模式:  动态选股（Top-${ASTOCK_TOP_N}，最大持仓 ${ASTOCK_MAX_POS}）"

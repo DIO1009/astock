@@ -5,24 +5,20 @@
 // If any check fails, BUY orders are suppressed for the current tick while
 // SELL / risk-exit orders continue unaffected (capital protection always wins).
 //
-// Five check categories (all must pass to allow new entries):
+// Four blocking check categories (all must pass to allow new entries):
 //
-//  1. Index price  – 000300 (or configured IndexSymbol) price must be > 0.
-//     A zero price means the provider has no data; MarketFilter would produce
-//     unreliable regime classification.
-//
-//  2. Quote freshness – every quote's Timestamp must be within today (CST).
+//  1. Quote freshness – every quote's Timestamp must be within today (CST).
 //     Stale yesterday-close prices must not trigger new entries.
 //
-//  3. Volume sanity – every stock must have Volume > 0.
+//  2. Volume sanity – every stock must have Volume > 0.
 //     Additionally, if ≥ 90 % of stocks share the same volume value the data
 //     is treated as frozen/replicated and rejected.
 //
-//  4. Price sanity – prices must be positive.
+//  3. Price sanity – prices must be positive.
 //     (Full cross-source deviation checking is a future enhancement; the
 //     single-source check is implemented here.)
 //
-//  5. Factor distribution – for each derived factor (PctChg, Return5d,
+//  4. Factor distribution – for each derived factor (PctChg, Return5d,
 //     Return20d, EMA20, Volatility) the checker computes mean / std / min / max.
 //     A near-zero std means every stock has the same value → factor is degenerate.
 package datacheck
@@ -40,8 +36,8 @@ import (
 
 // Config controls the thresholds used by every check.
 type Config struct {
-	// IndexSymbol is the market-index code whose price must be > 0.
-	// Typically "000300" (CSI 300).  Empty string disables the index check.
+	// IndexSymbol is logged when present; index quote failures are warnings only
+	// and never block new entries.  Empty string disables index logging.
 	IndexSymbol string
 
 	// MaxQuoteAgeHours is the maximum permitted age of a quote's timestamp.
@@ -142,15 +138,15 @@ func (c *Checker) Check(stockQuotes map[string]*core.Quote, indexQuote *core.Quo
 	result := CheckResult{OK: true}
 	now := time.Now()
 
-	// ── Check 1: Index price ──────────────────────────────────────────────────
+	// ── Index price (advisory only; does not block entries) ───────────────────
 	if c.cfg.IndexSymbol != "" {
 		if indexQuote == nil {
-			result.Errors = append(result.Errors,
-				fmt.Sprintf("[DataCheck] ❌ 指数行情缺失 symbol=%s — provider 未返回数据，MarketFilter 不可用，禁止开仓",
+			result.Warnings = append(result.Warnings,
+				fmt.Sprintf("[DataCheck] ⚠️  指数行情缺失 symbol=%s — 不影响开仓，MarketFilter 按震荡处理",
 					c.cfg.IndexSymbol))
 		} else if indexQuote.Price <= 0 {
-			result.Errors = append(result.Errors,
-				fmt.Sprintf("[DataCheck] ❌ 指数价格无效 symbol=%s price=%.4f — 返回0或负值，MarketFilter 不可用，禁止开仓",
+			result.Warnings = append(result.Warnings,
+				fmt.Sprintf("[DataCheck] ⚠️  指数价格无效 symbol=%s price=%.4f — 不影响开仓",
 					c.cfg.IndexSymbol, indexQuote.Price))
 		} else {
 			result.Warnings = append(result.Warnings,
