@@ -18,17 +18,17 @@ import (
 )
 
 const (
-	apiURL = "https://push2.eastmoney.com/api/qt/stock/get"
+	apiURL = "https://push2delay.eastmoney.com/api/qt/stock/get"
 	// f165 is requested only as an observed/compatibility field. It is not used
 	// to populate Return20d because it has not been verified as a 20-day return.
-	requestFields     = "f43,f44,f45,f47,f60,f170,f17,f19,f165"
+	requestFields      = "f43,f44,f45,f47,f60,f170,f17,f19,f165"
 	indexRequestFields = "f43,f44,f45,f47,f60,f170"
-	histLen           = 21
-	emaAlpha          = 2.0 / (20.0 + 1.0)
-	cacheMaxAge       = 15 * time.Second
+	histLen            = 21
+	emaAlpha           = 2.0 / (20.0 + 1.0)
+	cacheMaxAge        = 15 * time.Second
 
-	realtimeFetchAttempts      = 3
-	realtimeRetryBaseDelay     = 400 * time.Millisecond
+	realtimeFetchAttempts     = 3
+	realtimeRetryBaseDelay    = 400 * time.Millisecond
 	cacheFallbackMaxAge       = 60 * time.Second
 	noDataThreshold           = 3
 	maxRealtimePriceMoveRatio = 0.50
@@ -156,11 +156,11 @@ func resolveReturn20d(st *symState, price float64, _ *emData) float64 {
 }
 
 type Provider struct {
-	mu             sync.Mutex
-	states         map[string]*symState
-	client         *http.Client
-	httpLimiterMu  sync.Mutex
-	lastHTTPAt     time.Time
+	mu            sync.Mutex
+	states        map[string]*symState
+	client        *http.Client
+	httpLimiterMu sync.Mutex
+	lastHTTPAt    time.Time
 }
 
 func New() *Provider {
