@@ -92,7 +92,7 @@ func New(
 		executor:     executor,
 		tradeLogger:  tradeLogger,
 		reviewer:     reviewer,
-		rotationPol:  rotation.New(rotation.DefaultConfig()),
+		rotationPol:  nil,
 		lastReviewWk: -1,
 	}
 }
@@ -423,10 +423,6 @@ func (e *Engine) processTick() {
 		}
 	}
 
-	if e.rotationPol != nil {
-		e.processRotation(signals, stableSignals, stockQuotes, tradeDay)
-	}
-
 	regimeMinScore, regimeMinSource, _ := e.regimeMinScore(signals, mktState, e.cfg.OscillateMinScore)
 	if e.cfg.LogRank {
 		log.Printf("[MinScore] regime=%s minScore=%s=%.4f selected=%d/%d", mktState.String(), regimeMinSource, regimeMinScore, countSignalsAtLeast(signals, regimeMinScore), len(signals))
@@ -437,6 +433,9 @@ func (e *Engine) processTick() {
 		safetyAllowsOpen = false
 	}
 	if marketAllows && safetyAllowsOpen && dataCheckOK && e.portMgr != nil && e.portDecision != nil {
+		if e.rotationPol != nil {
+			e.processRotation(signals, stableSignals, stockQuotes, tradeDay)
+		}
 		positions = e.posMgr.AllPositions()
 		if e.portMgr.CanOpenPosition(positions) {
 			buySignals := stableSignals
