@@ -642,6 +642,10 @@ func main() {
 		log.Println("[Paper] FACTOR_DIAG=1 已开启：下一合法 tick 仅输出因子诊断并退出，不执行交易")
 	}
 
+	// ── 全局取消上下文（SIGTERM/SIGINT 时通知所有 goroutine 退出）──────────
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	// ── 每日自动选股调度器 ────────────────────────────────────────────────────
 	// 条件：DB 可用 + 动态 Screener 已初始化
 	// 行为：
@@ -649,7 +653,7 @@ func main() {
 	//   2. 每天 09:00 自动重新跑全市场选股，完成后刷新 Screener
 	// 好处：系统启动一次，无需每天手动操作
 	if dbStore != nil && dynScreener != nil {
-		go runAlphaScheduler(context.Background(), dbStore, dynScreener, dataProvider)
+		go runAlphaScheduler(ctx, dbStore, dynScreener, dataProvider)
 		log.Println("[Scheduler] ✅ 每日自动选股已启动（每天 09:00 自动运行，含今日初始化检查）")
 	}
 
@@ -663,7 +667,7 @@ func main() {
 	if dbStore != nil {
 		reportGen := report.NewGenerator(dbStore, perfTracker, posMgr, "reports")
 		reportSched := report.NewScheduler(reportGen, dbStore)
-		go reportSched.Run(context.Background())
+		go reportSched.Run(ctx)
 		log.Println("[ReportScheduler] ✅ 每日策略报告调度已启动（15:10 CST 自动生成，含重试与补偿）")
 	}
 	// ── Feature 6.2: 人工控制信号处理 ────────────────────────────────────────
@@ -694,9 +698,6 @@ func main() {
 	log.Printf("[Paper]   kill -HUP  %d  → 恢复开仓", os.Getpid())
 
 	// ── 运行 ──────────────────────────────────────────────────────────────────
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-
 	var runCtx context.Context
 	var cancel context.CancelFunc
 	if isLiveMode {

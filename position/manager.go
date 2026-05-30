@@ -154,7 +154,11 @@ func (m *Manager) ApplyTrade(trade *core.Trade) {
 // TRAIL_STOP is intentionally gated behind TrailStart so the trailing stop
 // never fires while the position is at a loss – it only "trails" a winner.
 func (m *Manager) CheckExit(pos *core.Position, q *core.Quote) string {
-	pnlPct := (q.Price - pos.AvgPrice) / pos.AvgPrice
+	sellPrice := q.Bid1
+	if sellPrice == 0 {
+		sellPrice = q.Price
+	}
+	pnlPct := (sellPrice - pos.AvgPrice) / pos.AvgPrice
 
 	switch {
 	case pnlPct <= -m.cfg.StopLossPct:
@@ -164,7 +168,7 @@ func (m *Manager) CheckExit(pos *core.Position, q *core.Quote) string {
 	case pnlPct >= m.cfg.TrailStart:
 		// Trailing stop only activates once position profit ≥ TrailStart.
 		// This ensures we never trail a losing position.
-		drawdown := (pos.HighestPrice - q.Price) / pos.HighestPrice
+		drawdown := (pos.HighestPrice - sellPrice) / pos.HighestPrice
 		if drawdown >= m.cfg.TrailDrop {
 			return "TRAIL_STOP"
 		}
