@@ -219,7 +219,7 @@ func (p *Policy) updateSymbolState(symbol string, rank int, tradeDay int64) *sym
 
 	if st.LastDay != tradeDay {
 		st.LastDay = tradeDay
-		if rank > p.cfg.RotationWatchRank {
+		if rank > p.cfg.RotationExitRank {
 			st.LagDays++
 		} else {
 			st.LagDays = 0
