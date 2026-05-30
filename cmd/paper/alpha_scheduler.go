@@ -10,7 +10,6 @@ import (
 	"astock_trade/calendar"
 	"astock_trade/core"
 	"astock_trade/provider/eastmoney"
-	"astock_trade/rotation"
 	"astock_trade/screener/dynamic"
 	"astock_trade/store"
 )
@@ -152,8 +151,9 @@ func runAndRefresh(ctx context.Context, st *store.Store, sc *dynamic.Screener, d
 		RequireVolume:    true, // reject suspended stocks (Volume==0 during trading hours)
 		TradeDate:        tradeDate,
 	}
-	if cfg.TopLayer2 < rotation.DefaultConfig().RotationExitRank {
-		cfg.TopLayer2 = rotation.DefaultConfig().RotationExitRank
+	rotationExitRank := envInt("ASTOCK_ROTATION_EXIT_RANK", 85)
+	if cfg.TopLayer2 < rotationExitRank {
+		cfg.TopLayer2 = rotationExitRank
 	}
 	res, err := daily.Run(ctx, st, cfg)
 	if err != nil {
