@@ -227,7 +227,7 @@ func hasAbnormalReturns(ret5d, ret10d, ret20d float64) bool {
 
 func toReturn(n json.Number) float64 {
 	value := toFloat(n)
-	if value < -100 || value > 1000 {
+	if value < -100 || value > 500 {
 		return 0
 	}
 	return value
