@@ -156,7 +156,7 @@ func parseTencentCloses(body []byte, tencentSymbol string) ([]DailyPoint, error)
 		if len(row) > 5 {
 			volume = parseTencentInt(row[5])
 		}
-		points = append(points, DailyPoint{Close: close, Volume: volume})
+		points = append(points, DailyPoint{Close: close, Volume: volume * 100})
 	}
 	return points, nil
 }

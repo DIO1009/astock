@@ -99,7 +99,7 @@ export default function App() {
       {/* ── Row 3: Equity Chart + Positions ───────────────────────────── */}
       <div className="flex gap-2" style={{ minHeight: 240 }}>
         <div className="flex-[3] min-w-0">
-          <EquityChart equity={snap?.equity ?? []} />
+          <EquityChart equity={snap?.equity ?? []} totalEquity={snap?.account?.total_equity} />
         </div>
         <div className="flex-[2] min-w-0">
           <PositionsTable positions={snap?.positions ?? []} />

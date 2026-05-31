@@ -1,21 +1,34 @@
 import { useState } from 'react'
 import {
   AreaChart, Area, LineChart, Line, XAxis, YAxis,
-  CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine
+  CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine,
+  ComposedChart
 } from 'recharts'
 import { EquityPoint } from '../types'
 
 type Range = 'all' | '50' | '20'
 
-interface Props { equity: EquityPoint[] }
+interface Props { equity: EquityPoint[]; totalEquity?: number }
 
-export default function EquityChart({ equity }: Props) {
+export default function EquityChart({ equity, totalEquity }: Props) {
   const [range, setRange] = useState<Range>('all')
 
+  // sync last equity point to freshest total_equity from OnQuoteRefresh,
+  // which can arrive between ticks with a more up-to-date value.
+  const synced = (() => {
+    if (!equity.length || totalEquity == null) return equity
+    const last = equity[equity.length - 1]
+    if (last.equity === totalEquity) return equity
+    // shallow-copy everything except the last entry
+    const out = equity.slice(0, -1)
+    out.push({ ...last, equity: totalEquity })
+    return out
+  })()
+
   const sliced = (() => {
-    if (range === '20') return equity.slice(-20)
-    if (range === '50') return equity.slice(-50)
-    return equity
+    if (range === '20') return synced.slice(-20)
+    if (range === '50') return synced.slice(-50)
+    return synced
   })()
 
   const maxDD = sliced.length ? Math.max(...sliced.map(p => p.drawdown)) : 0
@@ -40,7 +53,7 @@ export default function EquityChart({ equity }: Props) {
 
       <div className="flex-1 min-h-0">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={sliced} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
+          <ComposedChart data={sliced} margin={{ top: 4, right: 4, left: -10, bottom: 0 }}>
             <defs>
               <linearGradient id="equityGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#58a6ff" stopOpacity={0.3} />
@@ -82,15 +95,15 @@ export default function EquityChart({ equity }: Props) {
               formatter={v => v === 'equity' ? '权益' : '回撤'}
               wrapperStyle={{ fontSize: 11, color: '#8b949e' }}
             />
-            <Area yAxisId="equity" type="monotone" dataKey="equity"
+            <Area yAxisId="equity" type="linear" dataKey="equity"
               stroke="#58a6ff" strokeWidth={1.5} fill="url(#equityGrad)" dot={false} />
-            <Area yAxisId="dd" type="monotone" dataKey="drawdown"
-              stroke="#f85149" strokeWidth={1} fill="url(#ddGrad)" dot={false} />
+            <Line yAxisId="dd" type="linear" dataKey="drawdown"
+              stroke="#f85149" strokeWidth={1.5} dot={false} />
             {sliced.length > 0 && (
               <ReferenceLine yAxisId="equity" y={sliced[0].equity}
                 stroke="#30363d" strokeDasharray="4 4" />
             )}
-          </AreaChart>
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </div>

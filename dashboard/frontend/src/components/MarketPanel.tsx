@@ -55,7 +55,6 @@ export default function MarketPanel({ market, strategies }: Props) {
                     <span className={s.avg_pnl >= 0 ? 'text-profit' : 'text-loss'}>
                       {s.avg_pnl >= 0 ? '+' : ''}{s.avg_pnl.toFixed(2)}%
                     </span>
-                    <span>{s.trades}笔</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5">
