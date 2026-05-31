@@ -66,8 +66,9 @@ func TestToReturnRejectsImpossibleAndListingDateLikeValues(t *testing.T) {
 		{num("5.26"), 5.26},
 		{num("-100"), -100},
 		{num("-100.01"), 0},
-		{num("1000"), 1000},
-		{num("1000.01"), 0},
+		{num("500"), 500},
+		{num("500.01"), 0},
+		{num("1000"), 0},
 		{num("20020709"), 0},
 		{num("-2147483648"), 0},
 		{num("-"), 0},
@@ -109,7 +110,7 @@ func TestStockInfoFromRawRejectsNewStockNames(t *testing.T) {
 
 func TestStockInfoFromRawRejectsAbnormalFiveDayReturn(t *testing.T) {
 	raw := validRawStock("603435", "嘉德")
-	raw.F109 = num("608.31")
+	raw.F109 = num("200")
 
 	if _, ok := stockInfoFromRaw(raw); ok {
 		t.Fatalf("stockInfoFromRaw accepted abnormal Ret5d %q", raw.F109)
