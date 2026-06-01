@@ -118,6 +118,7 @@ func (d *Decision) Decide(
 			Reason:   reason,
 		})
 		buysPlaced++
+		held[sig.Symbol] = true // prevent same-tick duplicate BUY for same symbol
 	}
 
 	return orders
