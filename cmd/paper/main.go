@@ -468,6 +468,23 @@ func main() {
 		}
 		log.Printf("[Paper] ✅ 已恢复历史状态: executions=%d closedTrades=%d cash=¥%.2f",
 			len(restored.ExecutionRecords), len(restored.ClosedTrades), restored.Cash)
+
+		// Overwrite posMgr with authoritative positions from execution log replay
+		if len(restored.OpenPositions) > 0 {
+			posMap := make(map[string]core.Position, len(restored.OpenPositions))
+			for sym, sp := range restored.OpenPositions {
+				posMap[sym] = core.Position{
+					Symbol:       sym,
+					EntryPrice:   sp.AvgPrice,
+					AvgPrice:     sp.AvgPrice,
+					HighestPrice: sp.AvgPrice,
+					Quantity:     sp.Qty,
+					BuyTradeDay:  0, // will be reconciled by RebuildPositions based on todaySeq
+				}
+			}
+			posMgr.RebuildPositions(posMap, todayTradeDaySeq)
+			log.Printf("[Paper] ✅ 已从执行日志重建 %d 个持仓（覆盖快照）", len(posMap))
+		}
 	}
 	if dbStore != nil {
 		hydrateRuntimeFromDB(context.Background(), dbStore, perfTracker, mon, posMgr.AllPositions())
