@@ -47,6 +47,12 @@ type Config struct {
 	// residual DeployableCap.
 	// Example: [0.40, 0.30, 0.30] → rank#1 wants 40%, rank#2 30%, rank#3 30%.
 	RankPcts []float64
+
+	// MinAllocation is the minimum CNY allocation to open a position.
+	// Allocations below this are discarded to prevent absurdly small orders
+	// where minimum commission (¥5) inflates the per-share fill price.
+	// Default: 500.
+	MinAllocation float64
 }
 
 // Manager satisfies core.PortfolioManager.
@@ -73,6 +79,9 @@ func New(cfg Config) *Manager {
 		for i := range cfg.RankPcts {
 			cfg.RankPcts[i] = each
 		}
+	}
+	if cfg.MinAllocation <= 0 {
+		cfg.MinAllocation = 500
 	}
 	return &Manager{cfg: cfg}
 }
@@ -143,6 +152,9 @@ func (m *Manager) AllocatePlan(current []core.Position, maxRanks int) []float64 
 		actual := capped
 		if actual > deployable {
 			actual = deployable // remaining deployable budget
+		}
+		if actual < m.cfg.MinAllocation {
+			continue // skip; too small to be worth the minimum commission
 		}
 		result[i] = actual
 		deployable -= actual
