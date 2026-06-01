@@ -180,7 +180,7 @@ func New() *Provider {
 	}
 }
 
-func (p *Provider) GetRealtime(symbols []string) map[string]*core.Quote {
+func (p *Provider) GetRealtime(ctx context.Context, symbols []string) map[string]*core.Quote {
 	out := make(map[string]*core.Quote, len(symbols))
 	limit := realtimeConcurrencyLimit(len(symbols))
 	if limit <= 1 {
@@ -188,7 +188,12 @@ func (p *Provider) GetRealtime(symbols []string) map[string]*core.Quote {
 			if sym == "" {
 				continue
 			}
-			q, err := p.getOne(sym)
+			select {
+			case <-ctx.Done():
+				return out
+			default:
+			}
+			q, err := p.getOne(ctx, sym)
 			if err != nil {
 				log.Printf("[EastMoney] 获取 %s 实时行情失败: %v", sym, err)
 				continue
@@ -211,7 +216,7 @@ func (p *Provider) GetRealtime(symbols []string) map[string]*core.Quote {
 			defer wg.Done()
 			sem <- struct{}{}
 			defer func() { <-sem }()
-			q, err := p.getOne(symbol)
+			q, err := p.getOne(ctx, symbol)
 			if err != nil {
 				log.Printf("[EastMoney] 获取 %s 实时行情失败: %v", symbol, err)
 				return
@@ -225,7 +230,7 @@ func (p *Provider) GetRealtime(symbols []string) map[string]*core.Quote {
 	return out
 }
 
-func (p *Provider) getOne(symbol string) (*core.Quote, error) {
+func (p *Provider) getOne(ctx context.Context, symbol string) (*core.Quote, error) {
 	st := p.stateFor(symbol)
 	now := time.Now()
 	p.mu.Lock()
@@ -236,7 +241,7 @@ func (p *Provider) getOne(symbol string) (*core.Quote, error) {
 	}
 	p.mu.Unlock()
 
-	raw, err := p.fetchRawWithRetry(context.Background(), symbol)
+	raw, err := p.fetchRawWithRetry(ctx, symbol)
 	if err != nil {
 		p.mu.Lock()
 		st.lastErr = err
@@ -372,7 +377,7 @@ func (p *Provider) fetchRaw(ctx context.Context, symbol string) (*emData, error)
 	if p.client == nil {
 		p.client = New().client
 	}
-	p.throttleHTTP()
+	p.throttleHTTP(ctx)
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
 	if err != nil {
 		return nil, err
@@ -410,7 +415,7 @@ func (p *Provider) fetchRaw(ctx context.Context, symbol string) (*emData, error)
 	return decoded.Data, nil
 }
 
-func (p *Provider) throttleHTTP() {
+func (p *Provider) throttleHTTP(ctx context.Context) {
 	p.httpLimiterMu.Lock()
 	defer p.httpLimiterMu.Unlock()
 	if minInterval <= 0 {
@@ -419,7 +424,10 @@ func (p *Provider) throttleHTTP() {
 	}
 	wait := minInterval - time.Since(p.lastHTTPAt)
 	if wait > 0 {
-		time.Sleep(wait)
+		select {
+		case <-time.After(wait):
+		case <-ctx.Done():
+		}
 	}
 	p.lastHTTPAt = time.Now()
 }
