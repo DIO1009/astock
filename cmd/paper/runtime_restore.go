@@ -30,8 +30,9 @@ type restoredRuntimeState struct {
 
 
 type symbolPositionState struct {
-	Qty      int
-	AvgPrice float64
+	Qty         int
+	AvgPrice    float64
+	BuyTradeDay int64 // trading day sequence when position was opened; 0 = unknown
 }
 
 var (
@@ -39,7 +40,7 @@ var (
 	reasonPnlPattern = regexp.MustCompile(`pnl=\s*([+-]?[0-9]+(?:\.[0-9]+)?)%`)
 )
 
-func restoreRuntimeState(execPath string, initialCash float64, lookback time.Duration) (*restoredRuntimeState, error) {
+func restoreRuntimeState(execPath string, initialCash float64, lookback time.Duration, cal core.TradingCalendar) (*restoredRuntimeState, error) {
 	state := &restoredRuntimeState{Cash: initialCash}
 
 	f, err := os.Open(execPath)
@@ -100,17 +101,21 @@ func restoreRuntimeState(execPath string, initialCash float64, lookback time.Dur
 		}
 
 		switch rec.Side {
-		case "BUY":
-			state.Cash -= price * float64(qty)
-			pos := openPositions[rec.Symbol]
-			totalQty := pos.Qty + qty
-			if totalQty > 0 {
-				pos.AvgPrice = (pos.AvgPrice*float64(pos.Qty) + price*float64(qty)) / float64(totalQty)
-			} else {
-				pos.AvgPrice = price
-			}
-			pos.Qty = totalQty
-			openPositions[rec.Symbol] = pos
+	case "BUY":
+		state.Cash -= price * float64(qty)
+		pos := openPositions[rec.Symbol]
+		isNew := pos.Qty == 0
+		totalQty := pos.Qty + qty
+		if totalQty > 0 {
+			pos.AvgPrice = (pos.AvgPrice*float64(pos.Qty) + price*float64(qty)) / float64(totalQty)
+		} else {
+			pos.AvgPrice = price
+		}
+		pos.Qty = totalQty
+		if isNew && cal != nil {
+			pos.BuyTradeDay = cal.TradeDaySeq(time.UnixMilli(rec.ExecutionTime))
+		}
+		openPositions[rec.Symbol] = pos
 		case "SELL":
 			state.Cash += price * float64(qty)
 			pos := openPositions[rec.Symbol]
