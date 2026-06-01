@@ -68,6 +68,26 @@ func (m *Manager) SetStatePath(path string) {
 	m.mu.Unlock()
 }
 
+// RebuildPositions replaces all positions from authoritative data (e.g., execution log replay).
+// It applies the same T+1 sellable reconciliation as LoadState.
+func (m *Manager) RebuildPositions(positions map[string]core.Position, todaySeq int64) {
+	m.mu.Lock()
+	m.positions = make(map[string]*core.Position, len(positions))
+	for sym, p := range positions {
+		cp := p
+		if cp.BuyTradeDay >= todaySeq {
+			cp.SellableQty = 0
+		} else {
+			cp.SellableQty = cp.Quantity
+		}
+		m.positions[sym] = &cp
+	}
+	m.mu.Unlock()
+	if m.statePath != "" {
+		_ = m.SaveState(m.statePath)
+	}
+}
+
 // AdvanceTradeDay unlocks T+1 positions for the new trading day.
 // Must be called by the engine at the start of each tick before any trades.
 //
