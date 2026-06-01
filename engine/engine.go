@@ -121,14 +121,14 @@ func (e *Engine) Run(ctx context.Context) error {
 	log.Println("[Engine] trading loop started")
 	now := time.Now()
 	if e.inTradingHours(now) {
-		e.processTick()
+		e.processTick(ctx)
 		if e.factorDiagHalted {
 			log.Println("[Engine] 因子诊断完成，按配置退出")
 			return nil
 		}
 	} else {
 		log.Printf("[Engine] 启动时处于非交易时段（%s），首个 Tick 延后到合法交易窗口", now.In(cstZone).Format("01-02 15:04:05"))
-		e.refreshDashboardQuotes()
+		e.refreshDashboardQuotes(ctx)
 	}
 
 	skipLoggedHour := -1
@@ -145,11 +145,11 @@ func (e *Engine) Run(ctx context.Context) error {
 					skipLoggedHour = h
 					log.Printf("[Engine] 非交易时段（%s），跳过 Tick — 下一交易时段 09:30 CST", now.In(cstZone).Format("01-02 15:04"))
 				}
-				e.refreshDashboardQuotes()
+				e.refreshDashboardQuotes(ctx)
 				continue
 			}
 			skipLoggedHour = -1
-			e.processTick()
+			e.processTick(ctx)
 			if e.factorDiagHalted {
 				log.Println("[Engine] 因子诊断完成，按配置退出")
 				return nil
@@ -169,7 +169,7 @@ func (e *Engine) inTradingHours(t time.Time) bool {
 	return e.calendar.IsInTradingHours(t)
 }
 
-func (e *Engine) refreshDashboardQuotes() {
+func (e *Engine) refreshDashboardQuotes(ctx context.Context) {
 	if e.dashboard == nil || e.provider == nil || e.posMgr == nil || e.perfTracker == nil {
 		return
 	}
@@ -191,7 +191,7 @@ func (e *Engine) refreshDashboardQuotes() {
 		symbolSet[e.cfg.IndexSymbol] = true
 		symbols = append(symbols, e.cfg.IndexSymbol)
 	}
-	quotes := e.provider.GetRealtime(symbols)
+	quotes := e.provider.GetRealtime(ctx, symbols)
 	if len(positions) > 0 && !hasAnyValidPositionQuote(positions, quotes) {
 		// 非交易时段行情接口常不可用；不要用成本价回填现价，保留上次有效展示。
 		return
@@ -224,7 +224,7 @@ func (e *Engine) tradeDaySeq() int64 {
 }
 
 // processTick executes one full trading iteration. It is called only inside valid trading hours.
-func (e *Engine) processTick() {
+func (e *Engine) processTick(ctx context.Context) {
 	e.tickCount++
 	if e.execCtrl != nil {
 		e.execCtrl.AdvanceTick()
@@ -276,7 +276,7 @@ func (e *Engine) processTick() {
 	if e.cfg.IndexSymbol != "" {
 		fetchSymbols = append(fetchSymbols, e.cfg.IndexSymbol)
 	}
-	allQuotes := e.provider.GetRealtime(fetchSymbols)
+	allQuotes := e.provider.GetRealtime(ctx, fetchSymbols)
 	stockQuotes := make(map[string]*core.Quote, len(fetchSet))
 	for sym := range fetchSet {
 		if q := allQuotes[sym]; q != nil {
