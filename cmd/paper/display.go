@@ -5,7 +5,7 @@ import (
 
 	"astock_trade/core"
 	"astock_trade/monitor"
-	"astock_trade/paper"
+	paper "astock_trade/broker/paper"
 	"astock_trade/safety"
 )
 func printBanner() {
