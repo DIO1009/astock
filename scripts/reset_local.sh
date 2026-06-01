@@ -62,6 +62,3 @@ echo "▶ 清空报告与日志"
 rm -rf "$WORKSPACE/reports"
 mkdir -p "$WORKSPACE/reports"
 find "$WORKSPACE/logs" -type f -delete 2>/dev/null || true
-
-echo "▶ 重新启动"
-exec bash "$WORKSPACE/scripts/start.sh"
