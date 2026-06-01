@@ -12,6 +12,7 @@
 package mock
 
 import (
+	"context"
 	"math"
 	"math/rand"
 	"sync"
@@ -153,7 +154,7 @@ func (p *Provider) initSymbol(seedPrice float64) *symbolState {
 //
 // On the first call for a symbol, the state is initialised and pre-warmed so
 // that EMA20, Return5d, Return20d, and Volatility are immediately meaningful.
-func (p *Provider) GetRealtime(symbols []string) map[string]*core.Quote {
+func (p *Provider) GetRealtime(_ context.Context, symbols []string) map[string]*core.Quote {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
