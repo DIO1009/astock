@@ -122,7 +122,7 @@ func newScenarioProvider(cancelFn context.CancelFunc) *ScenarioProvider {
 
 // GetRealtime 每次调用推进指数价格一步，股票价格委托内部 mock.Provider 生成。
 // 当 tick 超过 runTicks 时触发 cancelFn，精确控制回测长度。
-func (sp *ScenarioProvider) GetRealtime(symbols []string) map[string]*core.Quote {
+func (sp *ScenarioProvider) GetRealtime(ctx context.Context, symbols []string) map[string]*core.Quote {
 	sp.mu.Lock()
 	sp.tick++
 	if sp.tick > runTicks && sp.cancelFn != nil {
@@ -163,7 +163,7 @@ func (sp *ScenarioProvider) GetRealtime(symbols []string) map[string]*core.Quote
 		}
 	}
 
-	result := sp.stocks.GetRealtime(stockSyms)
+	result := sp.stocks.GetRealtime(ctx, stockSyms)
 	if wantIdx {
 		spread := indexPrice * 0.001
 		result[indexSym] = &core.Quote{
