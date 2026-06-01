@@ -28,7 +28,7 @@ type Strategy struct {
 // New returns a volume Strategy. RefVolume defaults to 500_000 if not set.
 func New(cfg Config) *Strategy {
 	if cfg.RefVolume <= 0 {
-		cfg.RefVolume = 500_000
+		cfg.RefVolume = 50_000_000
 	}
 	return &Strategy{cfg: cfg}
 }

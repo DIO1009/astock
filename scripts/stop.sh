@@ -27,11 +27,17 @@ if kill -0 "$PID" 2>/dev/null; then
 
     # 先发 SIGTERM，给 Go 进程做优雅退出（保存持仓快照）
     kill -TERM "$PID" 2>/dev/null || true
-    sleep 3
 
-    # 若仍存活则强制终止
+    # 等待优雅退出：最长 30 秒，每 2 秒检查一次
+    WAITED=0
+    while kill -0 "$PID" 2>/dev/null && [ $WAITED -lt 30 ]; do
+        sleep 2
+        WAITED=$((WAITED + 2))
+    done
+
+    # 超时仍存活则强制终止
     if kill -0 "$PID" 2>/dev/null; then
-        echo "  [WARN] 进程未响应 SIGTERM，发送 SIGKILL..."
+        echo "  [WARN] 等待 ${WAITED}s 后进程仍未退出，发送 SIGKILL..."
         kill -KILL "$PID" 2>/dev/null || true
         sleep 1
     fi

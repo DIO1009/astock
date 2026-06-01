@@ -48,6 +48,7 @@ type Manager struct {
 	positions      map[string]*core.Position
 	cfg            Config
 	currentTradeDay int64 // set by AdvanceTradeDay; 0 = not yet initialised
+	statePath      string // auto-save path after each ApplyTrade; empty = disabled
 }
 
 // New returns an empty Manager with the provided configuration.
@@ -56,6 +57,15 @@ func New(cfg Config) *Manager {
 		positions: make(map[string]*core.Position),
 		cfg:       cfg,
 	}
+}
+
+// SetStatePath configures the auto-save path. After each ApplyTrade, the
+// position book is atomically persisted to this path so that crash/SIGKILL
+// never loses the latest state. Pass empty string to disable auto-save.
+func (m *Manager) SetStatePath(path string) {
+	m.mu.Lock()
+	m.statePath = path
+	m.mu.Unlock()
 }
 
 // AdvanceTradeDay unlocks T+1 positions for the new trading day.
@@ -96,7 +106,6 @@ func (m *Manager) AdvanceTradeDay(currentDay int64) {
 //	pos.SellableQty before calling ApplyTrade.
 func (m *Manager) ApplyTrade(trade *core.Trade) {
 	m.mu.Lock()
-	defer m.mu.Unlock()
 
 	switch trade.Side {
 	case "BUY":
@@ -128,6 +137,7 @@ func (m *Manager) ApplyTrade(trade *core.Trade) {
 	case "SELL":
 		pos, ok := m.positions[trade.Symbol]
 		if !ok {
+			m.mu.Unlock()
 			log.Printf("[PositionManager] SELL for unknown position %s – ignored", trade.Symbol)
 			return
 		}
@@ -143,6 +153,12 @@ func (m *Manager) ApplyTrade(trade *core.Trade) {
 
 	default:
 		log.Printf("[PositionManager] unknown trade side %q for %s – ignored", trade.Side, trade.Symbol)
+	}
+
+	m.mu.Unlock()
+
+	if m.statePath != "" {
+		_ = m.SaveState(m.statePath)
 	}
 }
 

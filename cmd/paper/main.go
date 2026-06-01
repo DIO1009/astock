@@ -208,7 +208,11 @@ func main() {
 		}
 	} else {
 		log.Println("[Paper] 无历史持仓快照，全新启动")
+
 	}
+
+	// 每次成交后自动保存持仓快照，防止崩溃/SIGKILL 丢失最新持仓状态
+	posMgr.SetStatePath(positionStatePath)
 
 	// ── 资金管理 ──────────────────────────────────────────────────────────────
 	// maxPositions 可通过环境变量 ASTOCK_MAX_POS 覆盖（动态选股模式建议 10-20）。
@@ -392,13 +396,13 @@ func main() {
 		registry.Entry{
 			Alpha: breakout.New(breakout.Config{
 				BreakoutThreshold: 8.0,
-				RefVolume:         500_000, // 500k 手/日，A股中盘股正常参考量
+				RefVolume:         50_000_000, // 5000万股/日，A股中盘股正常参考量（provider已将f47单位从手转为股）
 			}),
 			BaseWeight: 0.20,
 		},
 		registry.Entry{
 			Alpha: volume.New(volume.Config{
-				RefVolume: 500_000, // 500k 手/日，provider 现在以"手"存储成交量
+				RefVolume: 50_000_000, // 5000万股/日，provider已将f47单位从手转为股
 			}),
 			BaseWeight: 0.15,
 		},

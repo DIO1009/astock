@@ -48,7 +48,7 @@ func New(cfg Config) *Strategy {
 		cfg.BreakoutThreshold = 8.0
 	}
 	if cfg.RefVolume <= 0 {
-		cfg.RefVolume = 500_000
+		cfg.RefVolume = 50_000_000
 	}
 	return &Strategy{cfg: cfg}
 }

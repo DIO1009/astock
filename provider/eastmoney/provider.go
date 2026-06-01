@@ -544,7 +544,7 @@ func buildQuoteFromRaw(symbol string, st *symState, raw *emData, now time.Time) 
 	prevClose := normalizeEMPrice(raw.F60)
 	bid1 := normalizeEMPrice(raw.F17)
 	ask1 := normalizeEMPrice(raw.F19)
-	volume := int64(fieldToFloat(raw.F47))
+	volume := int64(fieldToFloat(raw.F47)) * 100
 	pctChg := normalizeEMPctChg(raw.F170, price, prevClose)
 	if bid1 == 0 {
 		bid1 = price
