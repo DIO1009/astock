@@ -31,6 +31,7 @@
 package stress
 
 import (
+	"context"
 	"math"
 	"math/rand"
 	"sync"
@@ -244,7 +245,7 @@ func New(cancelFn func()) *Provider {
 
 // GetRealtime advances the scenario by one tick and returns quotes for all
 // requested symbols (including the index).
-func (p *Provider) GetRealtime(symbols []string) map[string]*core.Quote {
+func (p *Provider) GetRealtime(_ context.Context, symbols []string) map[string]*core.Quote {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
