@@ -447,7 +447,7 @@ func main() {
 		ReportEveryNTicks: 10,
 	})
 
-	if restored, err := restoreRuntimeState(execLogPath, initialCapital, restoreLookback); err != nil {
+	if restored, err := restoreRuntimeState(execLogPath, initialCapital, restoreLookback, tradingCal); err != nil {
 		log.Printf("[Paper] 启动恢复执行/绩效历史失败: %v", err)
 		if positions := posMgr.AllPositions(); len(positions) > 0 {
 			// 回退到旧逻辑：至少扣除已恢复持仓的成本，避免现金翻倍。
@@ -475,7 +475,7 @@ func main() {
 					AvgPrice:     sp.AvgPrice,
 					HighestPrice: sp.AvgPrice,
 					Quantity:     sp.Qty,
-					BuyTradeDay:  0, // will be reconciled by RebuildPositions based on todaySeq
+					BuyTradeDay:  sp.BuyTradeDay,
 				}
 			}
 			posMgr.RebuildPositions(posMap, todayTradeDaySeq)
