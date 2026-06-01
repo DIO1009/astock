@@ -25,6 +25,7 @@ type restoredRuntimeState struct {
 	ExecutionRecords []core.ExecutionRecord
 	ClosedTrades     []core.ClosedTrade
 	EquityCurve      []float64
+	OpenPositions    map[string]symbolPositionState
 }
 
 
@@ -142,6 +143,8 @@ func restoreRuntimeState(execPath string, initialCash float64, lookback time.Dur
 		}
 	}
 
+	state.OpenPositions = openPositions
+
 	return state, nil
 }
 
@@ -204,8 +207,8 @@ func hydrateRuntimeFromDB(ctx context.Context, st *store.Store, perfTracker *per
 			peak = row.Equity
 		}
 	}
-	cash := rows[len(rows)-1].Cash
-	perfTracker.Restore(cash, curve, perfTracker.ClosedTrades())
+	// Do NOT use DB cash — cash is authoritative from restoreRuntimeState(executions)
+	perfTracker.Restore(perfTracker.Cash(), curve, perfTracker.ClosedTrades())
 
 	last := rows[len(rows)-1]
 	initialCapital := perfTracker.Report().InitialCapital
