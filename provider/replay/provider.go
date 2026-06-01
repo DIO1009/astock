@@ -18,6 +18,7 @@ package replay
 
 import (
 	"bufio"
+	"context"
 	"encoding/csv"
 	"fmt"
 	"math"
@@ -233,7 +234,7 @@ func (p *Provider) AddBar(symbol string, bar Bar) {
 // GetRealtime satisfies core.DataProvider.
 // Each call advances to the next bar for every requested symbol.
 // When data is exhausted the last available bar is held (price unchanged).
-func (p *Provider) GetRealtime(symbols []string) map[string]*core.Quote {
+func (p *Provider) GetRealtime(_ context.Context, symbols []string) map[string]*core.Quote {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
