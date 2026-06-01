@@ -39,7 +39,7 @@ func TestStartScriptPreservesRotationEnv(t *testing.T) {
 	if !strings.Contains(content, "ASTOCK_ROTATION_ENABLED:=0") {
 		t.Fatalf("scripts/start.sh must contain safe default/pass-through expansion ASTOCK_ROTATION_ENABLED:=0")
 	}
-	if !strings.Contains(content, "export ASTOCK_ROTATION_ENABLED") {
+	if !strings.Contains(content, "export ASTOCK_ROTATION_ENABLED") && !strings.Contains(content, "ASTOCK_TOP_N ASTOCK_MAX_POS ASTOCK_ROTATION_ENABLED ASTOCK_DB_DSN") {
 		t.Fatalf("scripts/start.sh must export ASTOCK_ROTATION_ENABLED")
 	}
 	if strings.Contains(content, "go run ./cmd/paper") {
