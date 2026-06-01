@@ -3,7 +3,10 @@
 // their own packages and are wired together in main.
 package core
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // ─── 交易日历 ─────────────────────────────────────────────────────────────────
 
@@ -33,7 +36,7 @@ type TradingCalendar interface {
 
 // DataProvider fetches real-time level-1 snapshots for the requested symbols.
 type DataProvider interface {
-	GetRealtime(symbols []string) map[string]*Quote
+	GetRealtime(ctx context.Context, symbols []string) map[string]*Quote
 }
 
 // Screener returns the current list of candidate symbols to watch.
