@@ -105,11 +105,11 @@ func Default() Config {
 		SlippageRandPct:     0.002,
 		DelaySlippagePct:    0.001,
 		VolumeCapPct:        0.05,
-		PartialFillProb:     0.20,
+		PartialFillProb:     0,
 		PartialFillMinRatio: 0.50,
 		// ↑ from 0.02/0.12 → targets blended fill rate ~83%
-		RejectProbNormal:  0.08,
-		RejectProbHighVol: 0.25,
+		RejectProbNormal:  0,
+		RejectProbHighVol: 0,
 		HighVolThreshold:  5.0,
 		// Feature 1: delay
 		MinDelayMs:    50.0,
@@ -117,7 +117,7 @@ func Default() Config {
 		PriceVolPerMs: 0.000025,
 		// Feature 2: passive order book
 		PassiveOrderRatio:  0.40,
-		PassiveRejectProb:  0.15,
+		PassiveRejectProb:  0,
 		HighVolPassiveMult: 2.5,
 		// Feature 3: market impact
 		MarketImpactCoeff: 0.10,
