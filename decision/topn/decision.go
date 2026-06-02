@@ -35,6 +35,9 @@ type Config struct {
 	// BuyThreshold: minimum score a signal must reach to trigger BUY.
 	// Sorted list allows safe break when threshold is not met.
 	BuyThreshold float64
+
+	// CostFactor 真实买卖成本系数，买入股数按 Ask1×(1+CostFactor) 计算以预留滑点+手续费缓冲
+	CostFactor float64
 }
 
 // Decision satisfies core.PortfolioDecision.
@@ -101,7 +104,7 @@ func (d *Decision) Decide(
 			continue
 		}
 
-		qty := int(alloc / q.Ask1)
+		qty := int(alloc / (q.Ask1 * (1 + d.cfg.CostFactor)))
 		if qty <= 0 {
 			continue
 		}
