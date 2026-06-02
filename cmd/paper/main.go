@@ -421,6 +421,7 @@ func main() {
 		MaxPositions: maxPositions,
 		TopN:         maxPositions,
 		BuyThreshold: 0.08,
+		CostFactor: 0.005,
 	})
 
 	execCtrl := execctrl.New(execctrl.Config{
