@@ -234,7 +234,7 @@ func main() {
 		TotalCapital: initialCapital,
 		MaxPositions: maxPositions,
 		MaxSinglePct: 0.20, // 动态模式下单仓上限降低，分散风险
-		MaxTotalPct:  0.80,
+		MaxTotalPct:  1.0,
 		RankPcts:     rankPcts,
 	})
 
@@ -260,7 +260,7 @@ func main() {
 		StreakPositionScale:  0.5,
 		StreakFreezeAt:       15,
 		StreakFreezeTicks:    12,
-		BaseMaxTotalPct:      0.80,
+		BaseMaxTotalPct:      1.0,
 		AbnormalLatencyMs:    15000,
 		AbnormalFillRatePct:  5.0,
 		AbnormalWindowTicks:  200,
@@ -610,7 +610,7 @@ func main() {
 		DrawdownThreshold:  drawdownEmergencyPct,
 		WinRateThreshold:   35.0,
 		MinTrades:          5,
-		NormalMaxTotalPct:  0.80,
+		NormalMaxTotalPct:  1.0,
 		ReducedMaxTotalPct: 0.50,
 		NormalBuyThreshold: 0.08,
 		RaisedBuyThreshold: 0.15,
