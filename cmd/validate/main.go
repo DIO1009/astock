@@ -257,8 +257,8 @@ func (ip *InstrumentedPerfTracker) OnBuy(trade *core.Trade) {
 	ip.inner.OnBuy(trade)
 }
 
-func (ip *InstrumentedPerfTracker) OnSell(trade *core.Trade, entryAvg float64, holdTicks int, exitType string) {
-	ip.inner.OnSell(trade, entryAvg, holdTicks, exitType)
+func (ip *InstrumentedPerfTracker) OnSell(trade *core.Trade, entryAvg float64, holdTicks int, buyPrice float64, openTime int64, exitType string) {
+	ip.inner.OnSell(trade, entryAvg, holdTicks, buyPrice, openTime, exitType)
 	pnlPct := 0.0
 	if entryAvg > 0 {
 		pnlPct = (trade.Price - entryAvg) / entryAvg * 100
