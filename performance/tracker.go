@@ -75,7 +75,7 @@ func (t *Tracker) OnBuy(trade *core.Trade) {
 
 // OnSell credits proceeds, records the closed trade, and logs a per-trade
 // equity snapshot.
-func (t *Tracker) OnSell(trade *core.Trade, entryAvgPrice float64, holdTicks int, exitType string) {
+func (t *Tracker) OnSell(trade *core.Trade, entryAvgPrice float64, holdTicks int, buyPrice float64, openTime int64, exitType string) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -92,11 +92,14 @@ func (t *Tracker) OnSell(trade *core.Trade, entryAvgPrice float64, holdTicks int
 		EntryPrice: entryAvgPrice,
 		ExitPrice:  trade.Price,
 		SellPrice:  trade.OrderPrice,
+		BuyPrice:   buyPrice,
 		Quantity:   trade.Quantity,
 		PnlPct:     pnlPct,
 		HoldTicks:  holdTicks,
 		ExitReason: exitType,
 		Timestamp:  trade.Timestamp,
+		OpenTime:   openTime,
+		CloseTime:  trade.Timestamp,
 	})
 
 	// Inline equity snapshot for the log line (equity = cash at this moment,
