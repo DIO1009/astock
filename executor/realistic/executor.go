@@ -101,9 +101,9 @@ func Default() Config {
 		StampTaxPct:         0.0005,
 		TransferFeePct:      0.00001,
 		MinCommission:       5.0,
-		SlippageBasePct:     0.001,
-		SlippageRandPct:     0.002,
-		DelaySlippagePct:    0.001,
+		SlippageBasePct:     0,
+		SlippageRandPct:     0,
+		DelaySlippagePct:    0,
 		VolumeCapPct:        0.05,
 		PartialFillProb:     0,
 		PartialFillMinRatio: 0.50,
@@ -114,13 +114,13 @@ func Default() Config {
 		// Feature 1: delay
 		MinDelayMs:    50.0,
 		MaxDelayMs:    500.0,
-		PriceVolPerMs: 0.000025,
+		PriceVolPerMs: 0,
 		// Feature 2: passive order book
 		PassiveOrderRatio:  0.40,
 		PassiveRejectProb:  0,
 		HighVolPassiveMult: 2.5,
 		// Feature 3: market impact
-		MarketImpactCoeff: 0.10,
+		MarketImpactCoeff: 0,
 	}
 }
 
