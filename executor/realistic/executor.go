@@ -351,12 +351,13 @@ func (e *Executor) Execute(order *core.Order, quote *core.Quote) (*core.Trade, e
 	}
 
 	return &core.Trade{
-		Symbol:    order.Symbol,
-		Side:      order.Side,
-		Price:     fillPrice,
-		Quantity:  fillQty,
-		Reason:    order.Reason,
-		Timestamp: time.Now().UnixMilli() + int64(delayMs),
+		Symbol:     order.Symbol,
+		Side:       order.Side,
+		Price:      fillPrice,
+		Quantity:   fillQty,
+		Reason:     order.Reason,
+		OrderPrice: order.Price,
+		Timestamp:  time.Now().UnixMilli() + int64(delayMs),
 	}, nil
 }
 
