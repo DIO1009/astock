@@ -47,6 +47,8 @@ type Position struct {
 	EntryPrice   float64 // 首次建仓成交价（只写一次，不随加仓变动）
 	// BuyPrice is the original limit order price at entry (without fees), for record only.
 	BuyPrice     float64 `json:"buy_price"`
+	// OpenTime is the Unix millisecond timestamp when the position was first opened.
+	OpenTime     int64
 	AvgPrice     float64 // 加权平均成本 = Σ(fillPrice×qty) / totalQty
 	HighestPrice float64 // 建仓后的最高成交价水位（用于移动止损）
 	Quantity     int     // 总持仓数量（含当日买入的锁定部分）
@@ -125,6 +127,12 @@ type ClosedTrade struct {
 	ExitPrice  float64 // actual fill price
 	// SellPrice is the original limit order price at exit (without fees), for record only.
 	SellPrice  float64 `json:"sell_price"`
+	// BuyPrice is the original limit order price at entry (without fees), for record only.
+	BuyPrice float64
+	// OpenTime is the Unix millisecond timestamp when the position was first opened.
+	OpenTime int64
+	// CloseTime is the Unix millisecond timestamp when the position was closed.
+	CloseTime int64
 	Quantity   int
 	PnlPct     float64 // (ExitPrice−EntryPrice)/EntryPrice×100
 	HoldTicks  int     // number of ticks position was held
