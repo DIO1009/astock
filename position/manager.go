@@ -147,6 +147,7 @@ func (m *Manager) ApplyTrade(trade *core.Trade) {
 				Symbol:       trade.Symbol,
 				EntryPrice:   trade.Price,
 				BuyPrice:     trade.OrderPrice,
+				OpenTime:     trade.Timestamp,
 				AvgPrice:     trade.Price,
 				HighestPrice: trade.Price,
 				Quantity:     trade.Quantity,
