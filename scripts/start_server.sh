@@ -37,7 +37,7 @@ fi
 : "${ASTOCK_ROTATION_ENABLED:=0}"
 : "${ASTOCK_EM_MIN_INTERVAL_MS:=1000}"
 : "${ASTOCK_EM_MAX_CONCURRENCY:=2}"
-: "${LARK_WEBHOOK_URL:=}"
+: "${LARK_WEBHOOK_URL:=https://open.larksuite.com/open-apis/bot/v2/hook/xxx}"
 : "${ASTOCK_DB_DSN:=postgres://postgres:dmrxlbol123@127.0.0.1:5432/astock_trade?sslmode=disable}"
 export ASTOCK_LIVE_DATA ASTOCK_TICK_SECONDS ASTOCK_DYNAMIC_SCREENER
 export ASTOCK_TOP_N ASTOCK_MAX_POS ASTOCK_ROTATION_ENABLED ASTOCK_DB_DSN
