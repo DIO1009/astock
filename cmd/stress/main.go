@@ -160,8 +160,8 @@ func (ip *instrPerf) OnBuy(t *core.Trade) {
 	ip.mu.Unlock()
 	ip.inner.OnBuy(t)
 }
-func (ip *instrPerf) OnSell(t *core.Trade, avg float64, hold int, exit string) {
-	ip.inner.OnSell(t, avg, hold, exit)
+func (ip *instrPerf) OnSell(t *core.Trade, avg float64, hold int, buyPrice float64, openTime int64, exit string) {
+	ip.inner.OnSell(t, avg, hold, buyPrice, openTime, exit)
 	pnl := 0.0
 	if avg > 0 {
 		pnl = (t.Price - avg) / avg * 100
