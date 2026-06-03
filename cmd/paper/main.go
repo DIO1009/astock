@@ -50,6 +50,7 @@ import (
 	"astock_trade/logger/console"
 	"astock_trade/logger/execution"
 	"astock_trade/logger/filelog"
+	"astock_trade/notify/lark"
 	"astock_trade/market/trend"
 	"astock_trade/monitor"
 	"astock_trade/performance"
@@ -688,6 +689,16 @@ func main() {
 		go reportSched.Run(ctx)
 		log.Println("[ReportScheduler] ✅ 每日策略报告调度已启动（15:10 CST 自动生成，含重试与补偿）")
 	}
+
+	// ── Lark 平仓日报调度器 ────────────────────────────────────────────────────
+	// 每个交易日 15:30 CST 通过 Lark webhook 发送当日平仓报告卡片。
+	// LARK_WEBHOOK_URL 未设置时静默跳过。
+	larkClient := lark.New()
+	if larkClient != nil {
+		go runCloseReportScheduler(ctx, perfTracker, tradingCal, larkClient)
+		log.Println("[CloseReport] ✅ 平仓日报已启动（交易日 15:30 CST 自动通过 Lark 发送）")
+	}
+
 	// ── Feature 6.2: 人工控制信号处理 ────────────────────────────────────────
 	//   SIGUSR1 → 停止开仓（保留平仓）
 	//   SIGUSR2 → 全部清仓
@@ -768,6 +779,61 @@ func main() {
 	}
 
 	printSummary(mon, paperBroker, safetyGuard)
+}
+
+// runCloseReportScheduler 每个交易日 15:30 CST 发送当日平仓日报到 Lark 频道。
+func runCloseReportScheduler(ctx context.Context, perfTracker core.PerformanceTracker, cal *calendar.Calendar, larkClient *lark.Client) {
+	cst := time.FixedZone("CST", 8*3600)
+
+	for {
+		now := time.Now().In(cst)
+		next := nextCloseReportTime(now, cst, cal)
+
+		log.Printf("[CloseReport] 下次报告时间: %s", next.Format("2006-01-02 15:04:05 CST"))
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(time.Until(next)):
+		}
+
+		// 15:30 触发
+		now = time.Now().In(cst)
+		dateStr := now.Format("2006-01-02")
+
+		allTrades := perfTracker.ClosedTrades()
+		var todayTrades []core.ClosedTrade
+		for _, ct := range allTrades {
+			t := time.UnixMilli(ct.CloseTime).In(cst)
+			if t.Format("2006-01-02") == dateStr {
+				todayTrades = append(todayTrades, ct)
+			}
+		}
+
+		if err := larkClient.SendDailyCloseReport(ctx, dateStr, todayTrades); err != nil {
+			log.Printf("[CloseReport] ❌ 发送失败: %v", err)
+		} else if len(todayTrades) > 0 {
+			log.Printf("[CloseReport] ✅ 平仓日报已发送（%d 笔平仓）", len(todayTrades))
+		}
+	}
+}
+
+// nextCloseReportTime 计算下一个触发时间：当前或下一个交易日 15:30 CST。
+func nextCloseReportTime(now time.Time, loc *time.Location, cal *calendar.Calendar) time.Time {
+	today := time.Date(now.Year(), now.Month(), now.Day(), 15, 30, 0, 0, loc)
+
+	// 如果今天尚未到 15:30 且今天是交易日 → 今天 15:30
+	if now.Before(today) && cal.IsTradeDay(today) {
+		return today
+	}
+
+	// 否则找下一个交易日
+	next := today.Add(24 * time.Hour)
+	for {
+		if cal.IsTradeDay(next) {
+			return next
+		}
+		next = next.Add(24 * time.Hour)
+	}
 }
 
 // resolveDataPath determines which CSV data file to load, in priority order:
