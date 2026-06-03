@@ -260,8 +260,10 @@ type PerformanceTracker interface {
 	// aggregate metrics.
 	// entryAvgPrice is the position's weighted average cost (from PositionManager).
 	// holdTicks is from ExecController (0 if unavailable).
+	// buyPrice is the raw limit buy price from the position (record only).
+	// openTime is the position open time in Unix ms (record only).
 	// exitType is one of "STOP_LOSS" | "TAKE_PROFIT" | "TRAIL_STOP".
-	OnSell(trade *Trade, entryAvgPrice float64, holdTicks int, exitType string)
+	OnSell(trade *Trade, entryAvgPrice float64, holdTicks int, buyPrice float64, openTime int64, exitType string)
 
 	// RecordEquity appends the current total equity to the historical curve.
 	// equity = Cash() + Σ(position.Qty × currentMarketPrice)
