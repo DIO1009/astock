@@ -45,6 +45,8 @@ type Quote struct {
 type Position struct {
 	Symbol       string
 	EntryPrice   float64 // 首次建仓成交价（只写一次，不随加仓变动）
+	// BuyPrice is the original limit order price at entry (without fees), for record only.
+	BuyPrice     float64 `json:"buy_price"`
 	AvgPrice     float64 // 加权平均成本 = Σ(fillPrice×qty) / totalQty
 	HighestPrice float64 // 建仓后的最高成交价水位（用于移动止损）
 	Quantity     int     // 总持仓数量（含当日买入的锁定部分）
@@ -73,6 +75,8 @@ type Trade struct {
 	Quantity  int
 	Reason    string
 	Timestamp int64
+	// OrderPrice is the original limit order price (without fees), for record only.
+	OrderPrice float64 `json:"order_price"`
 }
 
 // PortfolioStats is a per-tick snapshot of portfolio-level metrics.
@@ -119,6 +123,8 @@ type ClosedTrade struct {
 	Symbol     string
 	EntryPrice float64 // weighted average cost (AvgPrice at time of sell)
 	ExitPrice  float64 // actual fill price
+	// SellPrice is the original limit order price at exit (without fees), for record only.
+	SellPrice  float64 `json:"sell_price"`
 	Quantity   int
 	PnlPct     float64 // (ExitPrice−EntryPrice)/EntryPrice×100
 	HoldTicks  int     // number of ticks position was held
