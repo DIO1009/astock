@@ -91,6 +91,7 @@ func (t *Tracker) OnSell(trade *core.Trade, entryAvgPrice float64, holdTicks int
 		Symbol:     trade.Symbol,
 		EntryPrice: entryAvgPrice,
 		ExitPrice:  trade.Price,
+		SellPrice:  trade.OrderPrice,
 		Quantity:   trade.Quantity,
 		PnlPct:     pnlPct,
 		HoldTicks:  holdTicks,
