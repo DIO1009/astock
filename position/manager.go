@@ -146,6 +146,7 @@ func (m *Manager) ApplyTrade(trade *core.Trade) {
 			m.positions[trade.Symbol] = &core.Position{
 				Symbol:       trade.Symbol,
 				EntryPrice:   trade.Price,
+				BuyPrice:     trade.OrderPrice,
 				AvgPrice:     trade.Price,
 				HighestPrice: trade.Price,
 				Quantity:     trade.Quantity,
