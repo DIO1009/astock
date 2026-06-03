@@ -329,7 +329,7 @@ func (e *Engine) processTick(ctx context.Context) {
 			if trade != nil {
 				pnlPct := (trade.Price - pos.AvgPrice) / pos.AvgPrice * 100
 				if e.perfTracker != nil {
-					e.perfTracker.OnSell(trade, pos.AvgPrice, holdTicks, "STOP_LOSS")
+					e.perfTracker.OnSell(trade, pos.AvgPrice, holdTicks, pos.BuyPrice, pos.OpenTime, "STOP_LOSS")
 				}
 				e.safetyGuard.OnTradeClosed(pnlPct)
 				if reg, ok := e.alphaEng.(core.StrategyRegistry); ok {
@@ -368,7 +368,7 @@ func (e *Engine) processTick(ctx context.Context) {
 		}
 		if trade != nil {
 			if e.perfTracker != nil {
-				e.perfTracker.OnSell(trade, pos.AvgPrice, holdTicks, exitType)
+				e.perfTracker.OnSell(trade, pos.AvgPrice, holdTicks, pos.BuyPrice, pos.OpenTime, exitType)
 			}
 			if e.safetyGuard != nil {
 				e.safetyGuard.OnTradeClosed(pnlPct)
@@ -566,7 +566,7 @@ func (e *Engine) processRotation(signals []core.Signal, candidateSignals []core.
 			e.rotationPol.RecordRotation(tradeDay)
 			reserved[decision.Candidate.Symbol] = true
 			if e.perfTracker != nil {
-				e.perfTracker.OnSell(trade, pos.AvgPrice, holdTicks, "ROTATION")
+				e.perfTracker.OnSell(trade, pos.AvgPrice, holdTicks, pos.BuyPrice, pos.OpenTime, "ROTATION")
 			}
 			if e.safetyGuard != nil {
 				e.safetyGuard.OnTradeClosed(pnlPct)
