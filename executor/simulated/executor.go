@@ -82,11 +82,12 @@ func (e *Executor) Execute(order *core.Order, quote *core.Quote) (*core.Trade, e
 	}
 
 	return &core.Trade{
-		Symbol:    order.Symbol,
-		Side:      order.Side,
-		Price:     fillPrice,
-		Quantity:  order.Quantity,
-		Reason:    order.Reason, // propagate reason for audit logging
-		Timestamp: time.Now().UnixMilli(),
+		Symbol:     order.Symbol,
+		Side:       order.Side,
+		Price:      fillPrice,
+		Quantity:   order.Quantity,
+		Reason:     order.Reason, // propagate reason for audit logging
+		OrderPrice: order.Price,
+		Timestamp:  time.Now().UnixMilli(),
 	}, nil
 }
