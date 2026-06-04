@@ -461,6 +461,7 @@ func main() {
 		}
 		if restored.Cash > 0 || len(restored.ClosedTrades) > 0 {
 			perfTracker.Restore(restored.Cash, restored.EquityCurve, restored.ClosedTrades)
+			portMgr.SetCash(restored.Cash)
 		} else if positions := posMgr.AllPositions(); len(positions) > 0 {
 			perfTracker.SeedRestoredPositions(positions)
 		}
