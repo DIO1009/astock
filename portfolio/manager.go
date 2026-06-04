@@ -206,6 +206,16 @@ func (m *Manager) Stats(current []core.Position) core.PortfolioStats {
 	}
 }
 
+// SetCash synchronises the tracked cash balance with an externally maintained
+// value.  This is called on startup after the runtime state has been restored
+// from the execution log; it MUST NOT be used for regular per-trade updates
+// (those are handled by OnTrade).
+func (m *Manager) SetCash(cash float64) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.cash = cash
+}
+
 // SetMaxTotalPct updates the maximum total-deployed-capital fraction at runtime.
 // Implements core.MaxTotalPctSetter for adaptive position sizing.
 func (m *Manager) SetMaxTotalPct(pct float64) {
