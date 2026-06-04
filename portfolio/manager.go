@@ -57,8 +57,9 @@ type Config struct {
 
 // Manager satisfies core.PortfolioManager.
 type Manager struct {
-	mu  sync.RWMutex
-	cfg Config
+	mu   sync.RWMutex
+	cfg  Config
+	cash float64 // actual cash, tracks realized PnL via OnTrade
 }
 
 // New returns a Manager.  Sensible defaults are applied for any zero values.
@@ -83,7 +84,7 @@ func New(cfg Config) *Manager {
 	if cfg.MinAllocation <= 0 {
 		cfg.MinAllocation = 500
 	}
-	return &Manager{cfg: cfg}
+	return &Manager{cfg: cfg, cash: cfg.TotalCapital}
 }
 
 // usedCapital computes cost basis of all open positions.
@@ -106,6 +107,9 @@ func (m *Manager) CanOpenPosition(current []core.Position) bool {
 	}
 	used := usedCapital(current)
 	deployable := m.cfg.TotalCapital*m.cfg.MaxTotalPct - used
+	if m.cash < deployable {
+		deployable = m.cash
+	}
 	return deployable > 0
 }
 
@@ -126,6 +130,9 @@ func (m *Manager) AllocatePlan(current []core.Position, maxRanks int) []float64 
 
 	used := usedCapital(current)
 	deployable := m.cfg.TotalCapital*m.cfg.MaxTotalPct - used
+	if m.cash < deployable {
+		deployable = m.cash
+	}
 	if deployable <= 0 {
 		return result // all zeros
 	}
@@ -160,6 +167,17 @@ func (m *Manager) AllocatePlan(current []core.Position, maxRanks int) []float64 
 		deployable -= actual
 	}
 	return result
+}
+
+// OnTrade updates the tracked cash balance after every confirmed trade.
+func (m *Manager) OnTrade(side string, price float64, qty int) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if side == "BUY" {
+		m.cash -= price * float64(qty)
+	} else {
+		m.cash += price * float64(qty)
+	}
 }
 
 // Stats returns a snapshot of current portfolio metrics.

@@ -606,6 +606,9 @@ func (e *Engine) executeOrder(order core.Order, quotes map[string]*core.Quote) *
 		return nil
 	}
 	e.posMgr.ApplyTrade(trade)
+	if e.portMgr != nil {
+		e.portMgr.OnTrade(trade.Side, trade.Price, trade.Quantity)
+	}
 	e.tradeLogger.Log(trade)
 	return trade
 }

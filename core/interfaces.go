@@ -198,6 +198,10 @@ type PortfolioManager interface {
 
 	// Stats returns a snapshot of current portfolio metrics for logging.
 	Stats(current []Position) PortfolioStats
+
+	// OnTrade is called by the engine after every confirmed trade.
+	// side is "BUY" or "SELL", price is fill price, qty is shares.
+	OnTrade(side string, price float64, qty int)
 }
 
 // ─── 执行节奏控制 ──────────────────────────────────────────────────────────────
