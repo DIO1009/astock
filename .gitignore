@@ -19,3 +19,5 @@ backups/
 bin/
 scripts/pids
 config/server.env
+scripts/cuneim_branches.txt
+scripts/cleanup_cuneim.sh
