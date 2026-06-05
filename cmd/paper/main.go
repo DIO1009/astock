@@ -475,6 +475,8 @@ func main() {
 				posMap[sym] = core.Position{
 					Symbol:       sym,
 					EntryPrice:   sp.AvgPrice,
+					BuyPrice:     sp.BuyPrice,
+					OpenTime:     sp.OpenTime,
 					AvgPrice:     sp.AvgPrice,
 					HighestPrice: sp.AvgPrice,
 					Quantity:     sp.Qty,

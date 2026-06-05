@@ -32,7 +32,9 @@ type restoredRuntimeState struct {
 type symbolPositionState struct {
 	Qty         int
 	AvgPrice    float64
-	BuyTradeDay int64 // trading day sequence when position was opened; 0 = unknown
+	BuyTradeDay int64  // trading day sequence when position was opened; 0 = unknown
+	BuyPrice    float64 // Ask1 (first-entry limit order price, without fees)
+	OpenTime    int64   // Unix ms timestamp when position was first opened
 }
 
 var (
@@ -112,8 +114,12 @@ func restoreRuntimeState(execPath string, initialCash float64, lookback time.Dur
 			pos.AvgPrice = price
 		}
 		pos.Qty = totalQty
-		if isNew && cal != nil {
-			pos.BuyTradeDay = cal.TradeDaySeq(time.UnixMilli(rec.ExecutionTime))
+		if isNew {
+			if cal != nil {
+				pos.BuyTradeDay = cal.TradeDaySeq(time.UnixMilli(rec.ExecutionTime))
+			}
+			pos.BuyPrice = rec.TheoreticalPrice
+			pos.OpenTime = rec.ExecutionTime
 		}
 		openPositions[rec.Symbol] = pos
 		case "SELL":
@@ -138,6 +144,10 @@ func restoreRuntimeState(execPath string, initialCash float64, lookback time.Dur
 				HoldTicks:  0,
 				ExitReason: parseExitReason(rec.Reason),
 				Timestamp:  rec.ExecutionTime,
+				SellPrice:  rec.TheoreticalPrice,
+				BuyPrice:   pos.BuyPrice,
+				OpenTime:   pos.OpenTime,
+				CloseTime:  rec.ExecutionTime,
 			})
 			pos.Qty -= qty
 			if pos.Qty <= 0 {
