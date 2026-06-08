@@ -184,7 +184,7 @@ func main() {
 
 	// ── 盈利管理（需要在 posMgr 之前创建，持仓加载需要它）────────────────────
 	posMgr := position.New(position.Config{
-		StopLossPct:   0.05,
+		StopLossPct:   0.06,
 		TakeProfitPct: 0.30,
 		TrailStart:    0.06,
 		TrailDrop:     0.02,
@@ -224,11 +224,13 @@ func main() {
 	// RankPcts 在动态模式下使用等权分配，静态模式维持原有梯度。
 	rankPcts := []float64{0.40, 0.30, 0.30}
 	if maxPositions > 3 {
-		// 等权配置：每个仓位分配等量资金
-		pct := 1.0 / float64(maxPositions)
+		// 非均匀分配：Top 2 各 15%，其余等分剩余 70%
 		rankPcts = make([]float64, maxPositions)
-		for i := range rankPcts {
-			rankPcts[i] = pct
+		rankPcts[0] = 0.15
+		rankPcts[1] = 0.15
+		restPct := 0.70 / float64(maxPositions-2)
+		for i := 2; i < maxPositions; i++ {
+			rankPcts[i] = restPct
 		}
 	}
 	portMgr := portfolio.New(portfolio.Config{
@@ -380,7 +382,7 @@ func main() {
 				MaxReturn20d: 20.0,
 				Weight5d:     0.4,
 			}),
-			BaseWeight: 0.30,
+			BaseWeight: 0.40,
 		},
 		registry.Entry{
 			Alpha: reversal.New(reversal.Config{
@@ -388,7 +390,7 @@ func main() {
 				MaxReturn5d:  10.0,
 				WeightMA:     0.6,
 			}),
-			BaseWeight: 0.25,
+			BaseWeight: 0.15,
 		},
 		registry.Entry{
 			Alpha: breakout.New(breakout.Config{

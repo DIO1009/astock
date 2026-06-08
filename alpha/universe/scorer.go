@@ -16,11 +16,11 @@ type ScoredStock struct {
 
 // Factor weights (must sum to 1.0).
 const (
-	wRet5d       = 0.30
-	wRet20d      = 0.25
-	wVolumeRatio = 0.20
+	wRet5d       = -0.15
+	wRet20d      = 0.30
+	wVolumeRatio = 0.30
 	wTurnover    = 0.10
-	wChangeP     = 0.15
+	wChangeP     = 0.05
 )
 
 // Layer 1 – hard filter thresholds (applied before scoring).
