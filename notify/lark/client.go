@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"os"
 	"time"
@@ -18,6 +19,14 @@ var cst = time.FixedZone("CST", 8*3600)
 type Client struct {
 	webhookURL string
 	httpClient *http.Client
+}
+
+// CloseReportSummary holds account-level figures appended to the daily close report.
+type CloseReportSummary struct {
+	Cash          float64 // perfTracker.Cash()
+	PositionValue float64 // Σ qty × current price
+	TotalEquity   float64 // Cash + PositionValue
+	TodayClosePnl float64 // Σ today's closed-trade PnL (absolute)
 }
 
 // New creates a Lark Client. Returns nil when LARK_WEBHOOK_URL is not set or empty.
@@ -56,39 +65,10 @@ func (c *Client) SendCard(ctx context.Context, card map[string]interface{}) erro
 	return nil
 }
 
-// cardRecord represents one row in the daily close report card.
-type cardRecord struct {
-	Symbol    string
-	BuyPrice  float64
-	SellPrice float64
-	PnlPct    float64
-	OpenTime  int64
-	CloseTime int64
-}
-
 // SendDailyCloseReport formats and sends the daily close report card.
-// Skips silently when closedTrades is empty.
+// Sends even when closedTrades is empty (summary-only card).
 // date is the CST date string in "2006-01-02" format.
-func (c *Client) SendDailyCloseReport(ctx context.Context, date string, closedTrades []core.ClosedTrade) error {
-	if len(closedTrades) == 0 {
-		return nil
-	}
-
-	// Build records and format the markdown table.
-	records := make([]cardRecord, 0, len(closedTrades))
-	for _, ct := range closedTrades {
-		records = append(records, cardRecord{
-			Symbol:    ct.Symbol,
-			BuyPrice:  ct.BuyPrice,
-			SellPrice: ct.SellPrice,
-			PnlPct:    ct.PnlPct,
-			OpenTime:  ct.OpenTime,
-			CloseTime: ct.CloseTime,
-		})
-	}
-
-	md := buildMarkdownTable(date, records)
-
+func (c *Client) SendDailyCloseReport(ctx context.Context, date string, closedTrades []core.ClosedTrade, summary CloseReportSummary) error {
 	card := map[string]interface{}{
 		"msg_type": "interactive",
 		"card": map[string]interface{}{
@@ -99,38 +79,121 @@ func (c *Client) SendDailyCloseReport(ctx context.Context, date string, closedTr
 				},
 				"template": "blue",
 			},
-			"elements": []interface{}{
-				map[string]interface{}{
-					"tag":     "markdown",
-					"content": md,
-				},
-			},
+			"elements": buildCloseReportElements(closedTrades, summary),
 		},
 	}
 
 	return c.SendCard(ctx, card)
 }
 
-// buildMarkdownTable builds the markdown table string for the close report.
-// Format: | 股票 | 开仓价 | 平仓价 | 收益率 | 开仓时间 | 平仓时间 |
-// No summary row.
-func buildMarkdownTable(date string, records []cardRecord) string {
-	var buf bytes.Buffer
+// PnlAbs returns absolute PnL for one closed trade: (ExitPrice − EntryPrice) × Quantity.
+func PnlAbs(ct core.ClosedTrade) float64 {
+	return (ct.ExitPrice - ct.EntryPrice) * float64(ct.Quantity)
+}
 
-	buf.WriteString("| 股票 | 开仓价 | 平仓价 | 收益率 | 开仓时间 | 平仓时间 |\n")
-	buf.WriteString("|------|--------|--------|--------|----------|----------|\n")
+func buildCloseReportElements(closedTrades []core.ClosedTrade, summary CloseReportSummary) []interface{} {
+	elements := make([]interface{}, 0, len(closedTrades)*2+2)
 
-	for _, r := range records {
-		buf.WriteString(fmt.Sprintf("| %s | %.2f | %.2f | %+.2f%% | %s | %s |\n",
-			r.Symbol,
-			r.BuyPrice,
-			r.SellPrice,
-			r.PnlPct,
-			formatCSTTime(r.OpenTime),
-			formatCSTTime(r.CloseTime),
-		))
+	for i, ct := range closedTrades {
+		elements = append(elements, map[string]interface{}{
+			"tag": "div",
+			"text": map[string]interface{}{
+				"tag":     "lark_md",
+				"content": buildTradeBlock(ct),
+			},
+		})
+		if i < len(closedTrades)-1 {
+			elements = append(elements, map[string]interface{}{"tag": "hr"})
+		}
 	}
 
+	if len(closedTrades) > 0 {
+		elements = append(elements, map[string]interface{}{"tag": "hr"})
+	}
+
+	elements = append(elements, buildSummaryBlock(summary))
+	return elements
+}
+
+func buildTradeBlock(ct core.ClosedTrade) string {
+	return fmt.Sprintf("**%s**\n开仓 %.2f → 平仓 %.2f\n收益率 %+.2f%%  |  收益额 %s\n%s → %s",
+		ct.Symbol,
+		ct.EntryPrice,
+		ct.ExitPrice,
+		ct.PnlPct,
+		formatMoney(PnlAbs(ct)),
+		formatCSTTime(ct.OpenTime),
+		formatCSTTime(ct.CloseTime),
+	)
+}
+
+func buildSummaryBlock(summary CloseReportSummary) map[string]interface{} {
+	return map[string]interface{}{
+		"tag": "div",
+		"fields": []interface{}{
+			summaryField("当日平仓收益", formatMoney(summary.TodayClosePnl)),
+			summaryField("现金", formatMoneyPlain(summary.Cash)),
+			summaryField("剩余持仓市值", formatMoneyPlain(summary.PositionValue)),
+			summaryField("当前总和", formatMoneyPlain(summary.TotalEquity)),
+		},
+	}
+}
+
+func summaryField(label, value string) map[string]interface{} {
+	return map[string]interface{}{
+		"is_short": true,
+		"text": map[string]interface{}{
+			"tag":     "lark_md",
+			"content": fmt.Sprintf("**%s**\n%s", label, value),
+		},
+	}
+}
+
+// formatMoney formats a signed currency amount, e.g. +¥1,234.56 or -¥800.00.
+func formatMoney(v float64) string {
+	sign := "+"
+	if v < 0 {
+		sign = "-"
+	}
+	return fmt.Sprintf("%s¥%s", sign, formatAmount(math.Abs(v)))
+}
+
+// formatMoneyPlain formats an unsigned currency amount, e.g. ¥12,345.67.
+func formatMoneyPlain(v float64) string {
+	return "¥" + formatAmount(math.Abs(v))
+}
+
+func formatAmount(v float64) string {
+	// Round to 2 decimal places for display.
+	cents := int64(math.Round(v * 100))
+	whole := cents / 100
+	frac := cents % 100
+	if frac < 0 {
+		frac = -frac
+	}
+
+	wholeStr := formatThousands(whole)
+	return fmt.Sprintf("%s.%02d", wholeStr, frac)
+}
+
+func formatThousands(n int64) string {
+	if n < 0 {
+		return "-" + formatThousands(-n)
+	}
+	s := fmt.Sprintf("%d", n)
+	if len(s) <= 3 {
+		return s
+	}
+	var buf bytes.Buffer
+	rem := len(s) % 3
+	if rem == 0 {
+		rem = 3
+	}
+	buf.WriteString(s[:rem])
+	for i := rem; i < len(s); i += 3 {
+		buf.WriteByte(',')
+		buf.WriteString(s[i : i+3])
+	}
 	return buf.String()
 }
 

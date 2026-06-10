@@ -700,7 +700,7 @@ func main() {
 	// LARK_WEBHOOK_URL 未设置时静默跳过。
 	larkClient := lark.New()
 	if larkClient != nil {
-		go runCloseReportScheduler(ctx, perfTracker, tradingCal, larkClient)
+		go runCloseReportScheduler(ctx, perfTracker, posMgr, dataProvider, tradingCal, larkClient)
 		log.Println("[CloseReport] ✅ 平仓日报已启动（交易日 15:30 CST 自动通过 Lark 发送）")
 	}
 
@@ -787,7 +787,14 @@ func main() {
 }
 
 // runCloseReportScheduler 每个交易日 15:30 CST 发送当日平仓日报到 Lark 频道。
-func runCloseReportScheduler(ctx context.Context, perfTracker core.PerformanceTracker, cal *calendar.Calendar, larkClient *lark.Client) {
+func runCloseReportScheduler(
+	ctx context.Context,
+	perfTracker core.PerformanceTracker,
+	posMgr core.PositionManager,
+	dataProvider core.DataProvider,
+	cal *calendar.Calendar,
+	larkClient *lark.Client,
+) {
 	cst := time.FixedZone("CST", 8*3600)
 
 	for {
@@ -807,19 +814,60 @@ func runCloseReportScheduler(ctx context.Context, perfTracker core.PerformanceTr
 
 		allTrades := perfTracker.ClosedTrades()
 		var todayTrades []core.ClosedTrade
+		var todayClosePnl float64
 		for _, ct := range allTrades {
 			t := time.UnixMilli(ct.CloseTime).In(cst)
 			if t.Format("2006-01-02") == dateStr {
 				todayTrades = append(todayTrades, ct)
+				todayClosePnl += lark.PnlAbs(ct)
 			}
 		}
 
-		if err := larkClient.SendDailyCloseReport(ctx, dateStr, todayTrades); err != nil {
+		cash := perfTracker.Cash()
+		positions := posMgr.AllPositions()
+		symbols := make([]string, 0, len(positions))
+		for _, p := range positions {
+			symbols = append(symbols, p.Symbol)
+		}
+		quotes := dataProvider.GetRealtime(ctx, symbols)
+		if len(positions) > 0 && allHeldQuotesMissing(positions, quotes) {
+			log.Printf("[CloseReport] ⚠️  持仓行情缺失，市值回退为成本价估算")
+		}
+		positionValue := positionMarketValue(positions, quotes)
+		summary := lark.CloseReportSummary{
+			Cash:          cash,
+			PositionValue: positionValue,
+			TotalEquity:   cash + positionValue,
+			TodayClosePnl: todayClosePnl,
+		}
+
+		if err := larkClient.SendDailyCloseReport(ctx, dateStr, todayTrades, summary); err != nil {
 			log.Printf("[CloseReport] ❌ 发送失败: %v", err)
-		} else if len(todayTrades) > 0 {
-			log.Printf("[CloseReport] ✅ 平仓日报已发送（%d 笔平仓）", len(todayTrades))
+		} else {
+			log.Printf("[CloseReport] ✅ 平仓日报已发送（%d 笔平仓，账户总值 ¥%.2f）", len(todayTrades), summary.TotalEquity)
 		}
 	}
+}
+
+func positionMarketValue(positions []core.Position, quotes map[string]*core.Quote) float64 {
+	total := 0.0
+	for _, p := range positions {
+		price := p.AvgPrice
+		if q, ok := quotes[p.Symbol]; ok && q != nil && q.Price > 0 {
+			price = q.Price
+		}
+		total += price * float64(p.Quantity)
+	}
+	return total
+}
+
+func allHeldQuotesMissing(positions []core.Position, quotes map[string]*core.Quote) bool {
+	for _, p := range positions {
+		if q, ok := quotes[p.Symbol]; ok && q != nil && q.Price > 0 {
+			return false
+		}
+	}
+	return len(positions) > 0
 }
 
 // nextCloseReportTime 计算下一个触发时间：当前或下一个交易日 15:30 CST。
