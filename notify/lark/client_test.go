@@ -72,6 +72,43 @@ func TestBuildTradeBlock(t *testing.T) {
 	}
 }
 
+func TestTradeDisplayPrice(t *testing.T) {
+	t.Parallel()
+	withOrder := &core.Trade{Price: 10.03, OrderPrice: 10.00}
+	if got := TradeDisplayPrice(withOrder); got != 10.00 {
+		t.Fatalf("TradeDisplayPrice with OrderPrice = %v, want 10.00", got)
+	}
+	fallback := &core.Trade{Price: 9.88}
+	if got := TradeDisplayPrice(fallback); got != 9.88 {
+		t.Fatalf("TradeDisplayPrice fallback = %v, want 9.88", got)
+	}
+}
+
+func TestBuildTradeAlertBlock(t *testing.T) {
+	t.Parallel()
+	ts := time.Date(2025, 6, 11, 10, 15, 0, 0, cst).UnixMilli()
+	trade := &core.Trade{
+		Symbol:     "603773",
+		Side:       "BUY",
+		Price:      135.90,
+		OrderPrice: 135.85,
+		Quantity:   100,
+		Timestamp:  ts,
+	}
+	block := buildTradeAlertBlock(trade, "买入")
+	for _, want := range []string{
+		"**买入 603773**",
+		"成交价 **135.85**",
+		"数量 **100** 股",
+		"¥13,585.00",
+		"06-11 10:15",
+	} {
+		if !strings.Contains(block, want) {
+			t.Fatalf("buildTradeAlertBlock missing %q in:\n%s", want, block)
+		}
+	}
+}
+
 func TestBuildCloseReportElements(t *testing.T) {
 	t.Parallel()
 	summary := CloseReportSummary{

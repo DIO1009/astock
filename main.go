@@ -155,9 +155,9 @@ func main() {
 	//  TAKE_PROFIT pnl ≥ +30%      → 极强势天花板
 	posMgr := position.New(position.Config{
 		StopLossPct:   0.05,
-		TakeProfitPct: 0.30,
-		TrailStart:    0.06,
-		TrailDrop:     0.02,
+		TakeProfitPct: 0.20,
+		TrailStart:    0.05,
+		TrailDrop:     0.01,
 	})
 
 	// ── 资金管理 ──────────────────────────────────────────────────────────────

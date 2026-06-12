@@ -86,6 +86,68 @@ func (c *Client) SendDailyCloseReport(ctx context.Context, date string, closedTr
 	return c.SendCard(ctx, card)
 }
 
+// SendTradeAlert sends an immediate Lark card when a buy or sell fill is confirmed.
+func (c *Client) SendTradeAlert(ctx context.Context, trade *core.Trade) error {
+	if trade == nil {
+		return nil
+	}
+
+	sideLabel, template := "买入", "green"
+	if trade.Side == "SELL" {
+		sideLabel, template = "卖出", "orange"
+	}
+
+	card := map[string]interface{}{
+		"msg_type": "interactive",
+		"card": map[string]interface{}{
+			"header": map[string]interface{}{
+				"title": map[string]interface{}{
+					"content": fmt.Sprintf("%s %s", sideLabel, trade.Symbol),
+					"tag":     "plain_text",
+				},
+				"template": template,
+			},
+			"elements": []interface{}{
+				map[string]interface{}{
+					"tag": "div",
+					"text": map[string]interface{}{
+						"tag":     "lark_md",
+						"content": buildTradeAlertBlock(trade, sideLabel),
+					},
+				},
+			},
+		},
+	}
+
+	return c.SendCard(ctx, card)
+}
+
+// TradeDisplayPrice returns the per-share price shown in trade alerts.
+// Uses OrderPrice (quote-side limit without fee allocation); falls back to Price.
+func TradeDisplayPrice(trade *core.Trade) float64 {
+	if trade == nil {
+		return 0
+	}
+	if trade.OrderPrice > 0 {
+		return trade.OrderPrice
+	}
+	return trade.Price
+}
+
+func buildTradeAlertBlock(trade *core.Trade, sideLabel string) string {
+	price := TradeDisplayPrice(trade)
+	amount := price * float64(trade.Quantity)
+	return fmt.Sprintf(
+		"**%s %s**\n成交价 **%.2f**  |  数量 **%d** 股\n成交金额 %s\n时间 %s",
+		sideLabel,
+		trade.Symbol,
+		price,
+		trade.Quantity,
+		formatMoneyPlain(amount),
+		formatCSTTime(trade.Timestamp),
+	)
+}
+
 // PnlAbs returns absolute PnL for one closed trade: (ExitPrice − EntryPrice) × Quantity.
 func PnlAbs(ct core.ClosedTrade) float64 {
 	return (ct.ExitPrice - ct.EntryPrice) * float64(ct.Quantity)

@@ -185,9 +185,9 @@ func main() {
 	// ── 盈利管理（需要在 posMgr 之前创建，持仓加载需要它）────────────────────
 	posMgr := position.New(position.Config{
 		StopLossPct:   0.06,
-		TakeProfitPct: 0.30,
-		TrailStart:    0.06,
-		TrailDrop:     0.02,
+		TakeProfitPct: 0.20,
+		TrailStart:    0.05,
+		TrailDrop:     0.01,
 	})
 
 	// ── 交易日历（提前初始化，LoadState 需要今日序号做 T+1 reconcile）──────────
@@ -571,6 +571,9 @@ func main() {
 		log.Printf("[Data]    Tick 间隔: %s（可通过 ASTOCK_TICK_SECONDS 覆盖）", tickInterval)
 	}
 
+	larkClient := lark.New()
+	tradeExecutor := wrapExecutorWithLark(paperBroker, larkClient)
+
 	eng := engine.New(
 		engine.Config{
 			TickInterval:      tickInterval,
@@ -591,7 +594,7 @@ func main() {
 		portMgr,
 		execCtrl,
 		perfTracker,
-		paperBroker, // ← Paper Broker 替代 simulated.Executor
+		tradeExecutor, // Paper Broker（可选 Lark 成交通知包装）
 		tradeLogger,
 		reviewer,
 	)
@@ -697,11 +700,10 @@ func main() {
 
 	// ── Lark 平仓日报调度器 ────────────────────────────────────────────────────
 	// 每个交易日 15:30 CST 通过 Lark webhook 发送当日平仓报告卡片。
-	// LARK_WEBHOOK_URL 未设置时静默跳过。
-	larkClient := lark.New()
+	// LARK_WEBHOOK_URL 未设置时静默跳过。开/平仓即时通知见 wrapExecutorWithLark。
 	if larkClient != nil {
 		go runCloseReportScheduler(ctx, perfTracker, posMgr, dataProvider, tradingCal, larkClient)
-		log.Println("[CloseReport] ✅ 平仓日报已启动（交易日 15:30 CST 自动通过 Lark 发送）")
+		log.Println("[Lark] ✅ 开/平仓即时通知 + 平仓日报已启用（交易日 15:30 CST）")
 	}
 
 	// ── Feature 6.2: 人工控制信号处理 ────────────────────────────────────────
