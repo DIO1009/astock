@@ -184,10 +184,10 @@ func main() {
 
 	// ── 盈利管理（需要在 posMgr 之前创建，持仓加载需要它）────────────────────
 	posMgr := position.New(position.Config{
-		StopLossPct:   0.06,
+		StopLossPct:   0.07,
 		TakeProfitPct: 0.20,
-		TrailStart:    0.05,
-		TrailDrop:     0.01,
+		TrailStart:    0.04,
+		TrailDrop:     0.02,
 	})
 
 	// ── 交易日历（提前初始化，LoadState 需要今日序号做 T+1 reconcile）──────────
@@ -432,7 +432,7 @@ func main() {
 		CooldownTicksProfit: 3,
 		HighPriceBlockTicks: 20,
 		MinHoldTicks:        3,
-		MaxBuyPerTick:       2,
+		MaxBuyPerTick:       1,
 		MaxSellPerTick:      2,
 	})
 	rotCfg := rotation.Config{
@@ -581,7 +581,8 @@ func main() {
 			ReviewHour:        18,
 			LogRank:           true,
 			IndexSymbol:       indexSymbol,
-			OscillateMinScore: 0.30,
+			OscillateMinScore:        0.30,
+			OscillateThresholdMult:   1.2,
 		},
 		screener,
 		dataProvider,

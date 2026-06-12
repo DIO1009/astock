@@ -23,6 +23,10 @@ type Config struct {
 	LogRank           bool
 	IndexSymbol       string
 	OscillateMinScore float64
+	// OscillateThresholdMult scales the oscillating-market entry threshold after
+	// the base min score (max of p90 and OscillateMinScore) is computed.
+	// Example: 1.3 → base 0.30 becomes 0.39. Values ≤0 or 1.0 mean no scaling.
+	OscillateThresholdMult float64
 }
 
 // Engine is the central orchestrator.
@@ -645,10 +649,16 @@ func (e *Engine) regimeMinScore(signals []core.Signal, state core.MarketState, c
 	p90 := percentile(vals, 90)
 	switch state {
 	case core.MarketOscillate:
+		base, source := p90, "p90(total_score)"
 		if configuredFloor > p90 {
-			return configuredFloor, "max(p90(total_score),config_floor)", p90
+			base, source = configuredFloor, "max(p90(total_score),config_floor)"
 		}
-		return p90, "p90(total_score)", p90
+		mult := e.cfg.OscillateThresholdMult
+		if mult > 0 && mult != 1.0 {
+			base *= mult
+			source = fmt.Sprintf("%s×%.2f", source, mult)
+		}
+		return base, source, p90
 	case core.MarketUptrend:
 		return percentile(vals, 70), "p70(total_score)", p90
 	default:

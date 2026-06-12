@@ -154,10 +154,10 @@ func main() {
 	//  TRAIL_STOP  pnl ≥ +6% 后激活 → 回撤 2% 触发（主要出场通道）
 	//  TAKE_PROFIT pnl ≥ +30%      → 极强势天花板
 	posMgr := position.New(position.Config{
-		StopLossPct:   0.05,
+		StopLossPct:   0.07,
 		TakeProfitPct: 0.20,
-		TrailStart:    0.05,
-		TrailDrop:     0.01,
+		TrailStart:    0.04,
+		TrailDrop:     0.02,
 	})
 
 	// ── 资金管理 ──────────────────────────────────────────────────────────────
@@ -181,7 +181,7 @@ func main() {
 		CooldownTicksProfit: 3,
 		HighPriceBlockTicks: 20,
 		MinHoldTicks:        3,
-		MaxBuyPerTick:       2,
+		MaxBuyPerTick:       1,
 		MaxSellPerTick:      2,
 	})
 
@@ -201,7 +201,8 @@ func main() {
 			ReviewHour:        18,
 			LogRank:           true,
 			IndexSymbol:       indexSymbol,
-			OscillateMinScore: 0.30,
+			OscillateMinScore:        0.30,
+			OscillateThresholdMult:   1.2,
 		},
 		screener,
 		provider,

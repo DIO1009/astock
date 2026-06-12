@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"math"
 	"testing"
 
 	"astock_trade/core"
@@ -20,6 +21,24 @@ func TestRegimeMinScoreOscillateUsesConfiguredFloor(t *testing.T) {
 	}
 	if source != "max(p90(total_score),config_floor)" {
 		t.Fatalf("source = %q, want config floor source", source)
+	}
+}
+
+func TestRegimeMinScoreOscillateAppliesThresholdMultiplier(t *testing.T) {
+	e := &Engine{cfg: Config{OscillateThresholdMult: 1.3}}
+	signals := []core.Signal{
+		{Score: 0.10},
+		{Score: 0.20},
+		{Score: 0.25},
+	}
+
+	minScore, source, _ := e.regimeMinScore(signals, core.MarketOscillate, 0.30)
+	want := 0.30 * 1.3
+	if math.Abs(minScore-want) > 1e-9 {
+		t.Fatalf("minScore = %.4f, want %.4f", minScore, want)
+	}
+	if source != "max(p90(total_score),config_floor)×1.30" {
+		t.Fatalf("source = %q, want multiplier source", source)
 	}
 }
 
