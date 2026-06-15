@@ -58,9 +58,9 @@ func New(cfg Config) *Decision {
 // allocations[i] is the exact CNY budget for rank i (pre-computed by
 // PortfolioManager.AllocatePlan).  A zero value means "no budget → skip."
 func (d *Decision) Decide(
-	buySignals  []core.Signal,
-	quotes      map[string]*core.Quote,
-	positions   []core.Position,
+	buySignals []core.Signal,
+	quotes map[string]*core.Quote,
+	positions []core.Position,
 	allocations []float64,
 ) []core.Order {
 	orders := make([]core.Order, 0, len(buySignals))
@@ -104,7 +104,8 @@ func (d *Decision) Decide(
 			continue
 		}
 
-		qty := int(alloc / (q.Ask1 * (1 + d.cfg.CostFactor)))
+		rawQty := int(alloc / (q.Ask1 * (1 + d.cfg.CostFactor)))
+		qty := rawQty / 100 * 100
 		if qty <= 0 {
 			continue
 		}
