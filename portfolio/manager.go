@@ -107,9 +107,6 @@ func (m *Manager) CanOpenPosition(current []core.Position) bool {
 	}
 	used := usedCapital(current)
 	deployable := m.cfg.TotalCapital*m.cfg.MaxTotalPct - used
-	if m.cash < deployable {
-		deployable = m.cash
-	}
 	return deployable > 0
 }
 
@@ -132,9 +129,6 @@ func (m *Manager) AllocatePlan(current []core.Position, maxRanks int) []float64 
 	deployable := m.cfg.TotalCapital*m.cfg.MaxTotalPct - used
 	if m.cash < deployable {
 		deployable = m.cash
-	}
-	if deployable <= 0 {
-		return result // all zeros
 	}
 
 	maxSingle := m.cfg.TotalCapital * m.cfg.MaxSinglePct

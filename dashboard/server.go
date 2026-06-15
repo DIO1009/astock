@@ -327,7 +327,10 @@ func (s *Server) hub() {
 		case c := <-s.register:
 			s.clients[c] = struct{}{}
 			if lastSnapshot != nil {
-				select { case c.send <- lastSnapshot: default: }
+				select {
+				case c.send <- lastSnapshot:
+				default:
+				}
 			}
 		case c := <-s.unregister:
 			if _, ok := s.clients[c]; ok {
@@ -442,9 +445,9 @@ func (s *Server) pushSnapshot(snap Snapshot) {
 }
 
 func (s *Server) buildAccount(equity float64, report core.PerformanceReport, positions []core.Position, quotes map[string]*core.Quote, todayOpen float64, lastPrices map[string]float64) AccountInfo {
-	cash := 0.0
-	if s.perfTracker != nil {
-		cash = s.perfTracker.Cash()
+	cash := report.InitialCapital
+	for _, p := range positions {
+		cash -= p.AvgPrice * float64(p.Quantity)
 	}
 	invested := 0.0
 	for _, p := range positions {
@@ -604,15 +607,21 @@ func (s *Server) buildMarket(quotes map[string]*core.Quote) MarketInfo {
 func (s *Server) buildCandidates(positions []core.Position, quotes map[string]*core.Quote) []CandidateInfo {
 	s.mu.RLock()
 	signals := make(map[string]core.Signal, len(s.lastSignals))
-	for k, v := range s.lastSignals { signals[k] = v }
+	for k, v := range s.lastSignals {
+		signals[k] = v
+	}
 	counts := make(map[string]int, len(s.watchCounts))
-	for k, v := range s.watchCounts { counts[k] = v }
+	for k, v := range s.watchCounts {
+		counts[k] = v
+	}
 	s.mu.RUnlock()
 	if len(signals) == 0 {
 		return nil
 	}
 	inPos := make(map[string]bool, len(positions))
-	for _, p := range positions { inPos[p.Symbol] = true }
+	for _, p := range positions {
+		inPos[p.Symbol] = true
+	}
 	if s.dbStore != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		rankings, err := s.dbStore.GetTopRankings(ctx, 100)
@@ -710,8 +719,12 @@ func percentile(values []float64, p float64) float64 {
 		}
 	}
 	idx := int(math.Ceil(p*float64(len(v)))) - 1
-	if idx < 0 { idx = 0 }
-	if idx >= len(v) { idx = len(v)-1 }
+	if idx < 0 {
+		idx = 0
+	}
+	if idx >= len(v) {
+		idx = len(v) - 1
+	}
 	return v[idx]
 }
 
@@ -734,7 +747,9 @@ func (s *Server) bootstrapFromStore() {
 		peak := 0.0
 		for idx, row := range equityRows[start:] {
 			points = append(points, EquityPoint{Tick: idx + 1, Equity: row.Equity, Drawdown: row.Drawdown})
-			if row.Equity > peak { peak = row.Equity }
+			if row.Equity > peak {
+				peak = row.Equity
+			}
 		}
 		s.mu.Lock()
 		s.equityCurve = points
@@ -793,7 +808,9 @@ func apiJSON(w http.ResponseWriter, _ *http.Request, v any, err error) {
 
 func (s *Server) handleAPIEquity(w http.ResponseWriter, r *http.Request) {
 	rng := r.URL.Query().Get("range")
-	if rng == "" { rng = "all" }
+	if rng == "" {
+		rng = "all"
+	}
 	rows, err := s.dbStore.QueryEquityCurve(r.Context(), rng)
 	apiJSON(w, r, rows, err)
 }
