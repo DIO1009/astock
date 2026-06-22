@@ -445,10 +445,7 @@ func (s *Server) pushSnapshot(snap Snapshot) {
 }
 
 func (s *Server) buildAccount(equity float64, report core.PerformanceReport, positions []core.Position, quotes map[string]*core.Quote, todayOpen float64, lastPrices map[string]float64) AccountInfo {
-	cash := report.InitialCapital
-	for _, p := range positions {
-		cash -= p.AvgPrice * float64(p.Quantity)
-	}
+	cash := s.perfTracker.Cash()
 	invested := 0.0
 	for _, p := range positions {
 		invested += currentPrice(p, quotes, lastPrices) * float64(p.Quantity)
