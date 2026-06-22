@@ -57,9 +57,11 @@ type Config struct {
 
 // Manager satisfies core.PortfolioManager.
 type Manager struct {
-	mu   sync.RWMutex
-	cfg  Config
-	cash float64 // actual cash, tracks realized PnL via OnTrade
+	mu     sync.RWMutex
+	cfg    Config
+	cash   float64       // actual cash, tracks realized PnL via OnTrade
+	tiers  *EquityTiers  // nil means use legacy Config-based sizing
+	equity float64       // current total equity (cash + market value), updated per tick
 }
 
 // New returns a Manager.  Sensible defaults are applied for any zero values.
@@ -97,13 +99,20 @@ func usedCapital(positions []core.Position) float64 {
 }
 
 // CanOpenPosition returns true when the portfolio can accept at least one
-// more position (by count, cash, and total-pct ceiling).
+// more position (by count and available cash).
 func (m *Manager) CanOpenPosition(current []core.Position) bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 
-	if len(current) >= m.cfg.MaxPositions {
+	maxPos := m.cfg.MaxPositions
+	if m.tiers != nil {
+		maxPos = m.tiers.MaxPositions(m.equity)
+	}
+	if len(current) >= maxPos {
 		return false
+	}
+	if m.tiers != nil {
+		return m.cash > 0
 	}
 	used := usedCapital(current)
 	deployable := m.cfg.TotalCapital*m.cfg.MaxTotalPct - used
@@ -125,6 +134,14 @@ func (m *Manager) AllocatePlan(current []core.Position, maxRanks int) []float64 
 
 	result := make([]float64, maxRanks)
 
+	if m.tiers == nil {
+		return m.allocatePlanLegacy(current, maxRanks, result)
+	}
+	return m.allocatePlanTiers(current, maxRanks, result)
+}
+
+// allocatePlanLegacy uses the original Config-based sizing (TotalCapital, MaxSinglePct, MaxTotalPct).
+func (m *Manager) allocatePlanLegacy(current []core.Position, maxRanks int, result []float64) []float64 {
 	used := usedCapital(current)
 	deployable := m.cfg.TotalCapital*m.cfg.MaxTotalPct - used
 	if m.cash < deployable {
@@ -145,17 +162,66 @@ func (m *Manager) AllocatePlan(current []core.Position, maxRanks int) []float64 
 		if pct <= 0 {
 			continue
 		}
-		raw := m.cfg.TotalCapital * pct // desired
+		raw := m.cfg.TotalCapital * pct
 		capped := raw
 		if capped > maxSingle {
-			capped = maxSingle // per-stock cap
+			capped = maxSingle
 		}
 		actual := capped
 		if actual > deployable {
-			actual = deployable // remaining deployable budget
+			actual = deployable
 		}
 		if actual < m.cfg.MinAllocation {
-			continue // skip; too small to be worth the minimum commission
+			continue
+		}
+		result[i] = actual
+		deployable -= actual
+	}
+	return result
+}
+
+// allocatePlanTiers uses equity-tier-based sizing: cash as deployable, absolute caps, dynamic MaxPositions.
+func (m *Manager) allocatePlanTiers(current []core.Position, maxRanks int, result []float64) []float64 {
+	// Deployable = actual cash (includes accumulated realized PnL).
+	deployable := m.cash
+
+	// Single-position cap from the current tier.
+	maxSingle := m.tiers.SingleCap(m.equity)
+
+	// Dynamic max positions for the current equity level.
+	openSlots := m.tiers.MaxPositions(m.equity) - len(current)
+	if openSlots < 0 {
+		openSlots = 0
+	}
+
+	// Budget base grows with equity.
+	budgetBase := m.equity
+	if budgetBase <= 0 {
+		budgetBase = m.cash
+	}
+
+	for i := 0; i < maxRanks; i++ {
+		if i >= openSlots || deployable <= 0 {
+			break
+		}
+		pct := 0.0
+		if i < len(m.cfg.RankPcts) {
+			pct = m.cfg.RankPcts[i]
+		}
+		if pct <= 0 {
+			continue
+		}
+		raw := budgetBase * pct // desired allocation grows with equity
+		capped := raw
+		if capped > maxSingle {
+			capped = maxSingle // absolute single-position cap
+		}
+		actual := capped
+		if actual > deployable {
+			actual = deployable // remaining cash budget
+		}
+		if actual < m.cfg.MinAllocation {
+			continue
 		}
 		result[i] = actual
 		deployable -= actual
@@ -189,6 +255,13 @@ func (m *Manager) Stats(current []core.Position) core.PortfolioStats {
 	if m.cfg.TotalCapital > 0 {
 		usedPct = used / m.cfg.TotalCapital * 100
 	}
+	maxPos := m.cfg.MaxPositions
+	if m.tiers != nil {
+		maxPos = m.tiers.MaxPositions(m.equity)
+		// When tiers are active, available = cash account balance.
+		available = m.cash
+		deployable = m.cash
+	}
 	return core.PortfolioStats{
 		TotalCapital:     m.cfg.TotalCapital,
 		UsedCapital:      used,
@@ -196,7 +269,7 @@ func (m *Manager) Stats(current []core.Position) core.PortfolioStats {
 		DeployableCap:    deployable,
 		UsedPct:          usedPct,
 		PositionCount:    len(current),
-		MaxPositions:     m.cfg.MaxPositions,
+		MaxPositions:     maxPos,
 	}
 }
 
@@ -208,6 +281,24 @@ func (m *Manager) SetCash(cash float64) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.cash = cash
+}
+
+// SetTiers enables equity-tier-based dynamic sizing.  When nil the Manager
+// falls back to the legacy Config-based sizing used by backtest / stress /
+// validate entry points.
+func (m *Manager) SetTiers(t *EquityTiers) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.tiers = t
+}
+
+// UpdateEquity records the latest total equity so AllocatePlan, Stats etc.
+// use the correct tier.  Called by the engine once per tick after computing
+// equity = cash + Σ(position.Qty × marketPrice).
+func (m *Manager) UpdateEquity(equity float64) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.equity = equity
 }
 
 // SetMaxTotalPct updates the maximum total-deployed-capital fraction at runtime.

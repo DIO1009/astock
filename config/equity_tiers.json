@@ -1,0 +1,15 @@
+{
+  "base_positions": 10,
+  "tiers": [
+    {"min_equity": 100000, "single_position_cap": 20000},
+    {"min_equity": 200000, "single_position_cap": 40000},
+    {"min_equity": 300000, "single_position_cap": 60000},
+    {"min_equity": 400000, "single_position_cap": 80000},
+    {"min_equity": 500000, "single_position_cap": 100000},
+    {"min_equity": 600000, "single_position_cap": 120000},
+    {"min_equity": 700000, "single_position_cap": 140000},
+    {"min_equity": 800000, "single_position_cap": 160000},
+    {"min_equity": 900000, "single_position_cap": 180000},
+    {"min_equity": 1000000, "single_position_cap": 200000}
+  ]
+}

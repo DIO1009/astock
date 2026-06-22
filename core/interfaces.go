@@ -183,17 +183,23 @@ type PositionManager interface {
 // PortfolioManager decides whether and how much capital to deploy.
 //
 // Lifecycle per tick:
-//  1. Call Stats(current)          – log portfolio state
-//  2. Call CanOpenPosition(current) – hard gate; abort if false
-//  3. Call AllocatePlan(current, n) – get per-rank CNY amounts for up to n ranks
+//  1. UpdateEquity(equity)         – notify latest total equity for tier-based sizing
+//  2. Call Stats(current)          – log portfolio state
+//  3. Call CanOpenPosition(current) – hard gate; abort if false
+//  4. Call AllocatePlan(current, n) – get per-rank CNY amounts for up to n ranks
 type PortfolioManager interface {
+	// UpdateEquity records the latest total equity (cash + market value of
+	// positions) so tier-based sizing can select the correct equity band.
+	// Must be called once per tick before CanOpenPosition / AllocatePlan.
+	UpdateEquity(equity float64)
+
 	// CanOpenPosition returns true if the portfolio has room (by count, available
 	// cash, and MaxTotalPct cap) to accept at least one more position.
 	CanOpenPosition(current []Position) bool
 
 	// AllocatePlan returns a slice of CNY amounts to deploy, one per rank.
 	// len(result) == maxRanks; result[i] may be 0 if budget is exhausted.
-	// Each amount already respects MaxSinglePct and MaxTotalPct constraints.
+	// Each amount already respects single-position and total-deployed constraints.
 	AllocatePlan(current []Position, maxRanks int) []float64
 
 	// Stats returns a snapshot of current portfolio metrics for logging.

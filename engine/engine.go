@@ -503,6 +503,9 @@ func (e *Engine) processTick(ctx context.Context) {
 				equity += float64(pos.Quantity) * pos.AvgPrice
 			}
 		}
+		if e.portMgr != nil {
+			e.portMgr.UpdateEquity(equity)
+		}
 		e.perfTracker.RecordEquity(equity)
 		e.perfTracker.MaybeReport(e.tickCount)
 		if e.monitor != nil {

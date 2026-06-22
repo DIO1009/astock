@@ -80,6 +80,7 @@ const (
 	positionStatePath     = "position_state.jsonl" // Feature 6: 持仓快照文件
 	tradingCostConfigPath = "config/trading_cost.json"
 	safetyConfigPath      = "config/safety.json"
+	equityTiersConfigPath = "config/equity_tiers.json"
 	indexSymbol           = "000001.SH" // 上证指数（用于 MarketFilter 趋势判断）
 	initialCapital        = 100_000.0
 	dashboardAddr         = ":18099" // Trading Cockpit WebSocket 端口
@@ -240,6 +241,15 @@ func main() {
 		MaxTotalPct:  1.0,
 		RankPcts:     rankPcts,
 	})
+
+	// ── 利润复投：阶梯仓位 ──────────────────────────────────────────────────────
+	tiers, err := portfolio.LoadTiers(equityTiersConfigPath)
+	if err != nil {
+		log.Fatalf("[Paper] 加载权益阶梯配置失败: %v", err)
+	}
+	portMgr.SetTiers(tiers)
+	portMgr.UpdateEquity(initialCapital)
+	log.Printf("[Paper] 利润复投已启用：base_positions=%d tiers=%d", tiers.BasePositions, len(tiers.Tiers))
 
 	// ── Feature 6: 安全控制层 ────────────────────────────────────────────────
 	//
