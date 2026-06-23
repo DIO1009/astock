@@ -239,6 +239,7 @@ func main() {
 		MaxPositions: maxPositions,
 		MaxSinglePct: 0.20, // 动态模式下单仓上限降低，分散风险
 		MaxTotalPct:  1.0,
+		MinAllocation: 10000,
 		RankPcts:     rankPcts,
 	})
 
