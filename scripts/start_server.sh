@@ -157,6 +157,7 @@ fi
 
 # ── 启动 ──────────────────────────────────────────────────────────────────────
 DASHBOARD_PORT="18099"
+export DASHBOARD_PORT
 LOG_FILE="logs/paper_trader_$(date +%Y%m%d_%H%M%S).log"
 echo "▶ 启动交易后端 (nohup)..."
 nohup "$BIN" >>"$LOG_FILE" 2>&1 &

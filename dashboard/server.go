@@ -78,7 +78,12 @@ func New(cfg Config, mon *monitor.Monitor, sg *safety.Guard, re *risk.Engine,
 	broker *paper.Broker, alpha core.AlphaEngine,
 ) *Server {
 	if cfg.Addr == "" {
-		cfg.Addr = ":18099"
+		port := os.Getenv("DASHBOARD_PORT")
+		if port != "" {
+			cfg.Addr = ":" + port
+		} else {
+			cfg.Addr = ":18099"
+		}
 	}
 	if cfg.EquityMaxLen <= 0 {
 		cfg.EquityMaxLen = 600

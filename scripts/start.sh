@@ -107,7 +107,8 @@ go build -o "$BIN" ./cmd/paper
 echo "  ✓ 编译完成 → bin/paper_trader"
 
 # ── 启动 ──────────────────────────────────────────────────────────────────────
-DASHBOARD_PORT="18099"
+DASHBOARD_PORT="28099"
+export DASHBOARD_PORT
 LOG_FILE="logs/paper_trader_$(date +%Y%m%d_%H%M%S).log"
 echo "▶ 启动交易后端 (caffeinate -ims，休眠时保持运行与联网)..."
 # caffeinate 为父进程；PID 文件记录其 PID，stop.sh 对其发 SIGTERM 即可连带退出子进程

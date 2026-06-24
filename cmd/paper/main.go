@@ -83,7 +83,6 @@ const (
 	equityTiersConfigPath = "config/equity_tiers.json"
 	indexSymbol           = "000001.SH" // 上证指数（用于 MarketFilter 趋势判断）
 	initialCapital        = 100_000.0
-	dashboardAddr         = ":18099" // Trading Cockpit WebSocket 端口
 	// 0 = restore full persisted runtime history instead of truncating to a recent window.
 	restoreLookback = 0 * time.Hour
 
@@ -92,6 +91,15 @@ const (
 	drawdownTier3Pct     = 35.0
 	drawdownEmergencyPct = 40.0
 )
+
+// dashboardAddr 从环境变量 DASHBOARD_PORT 读取 Dashboard 监听地址，兜底 :18099。
+func dashboardAddr() string {
+	port := os.Getenv("DASHBOARD_PORT")
+	if port == "" {
+		return ":18099"
+	}
+	return ":" + port
+}
 
 var symbols = []string{
 	"600519", // 贵州茅台 - 消费
@@ -660,7 +668,7 @@ func main() {
 
 	// ── Dashboard 服务器（在所有组件就绪后创建）──────────────────────────────
 	dashSrv := dashboard.New(
-		dashboard.Config{Addr: dashboardAddr, StaticDir: "dashboard/frontend/dist"},
+		dashboard.Config{Addr: dashboardAddr(), StaticDir: "dashboard/frontend/dist"},
 		mon, safetyGuard, riskEngine,
 		posMgr, perfTracker, paperBroker, alphaReg,
 	)
