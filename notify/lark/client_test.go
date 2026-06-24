@@ -1,7 +1,10 @@
 package lark
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -106,6 +109,67 @@ func TestBuildTradeAlertBlock(t *testing.T) {
 		if !strings.Contains(block, want) {
 			t.Fatalf("buildTradeAlertBlock missing %q in:\n%s", want, block)
 		}
+	}
+}
+
+func TestNewReturnNilWhenNoEnv(t *testing.T) {
+	t.Setenv("LARK_WEBHOOK_URL", "")
+	t.Setenv("LARK_WEBHOOK_URL2", "")
+	if New() != nil {
+		t.Fatal("expected nil when no env set")
+	}
+}
+
+func TestNewWithURLsIgnoresEmpty(t *testing.T) {
+	c := NewWithURLs("", "")
+	if c != nil {
+		t.Fatal("expected nil for empty URLs")
+	}
+	c = NewWithURLs("https://open.feishu.cn/a", "")
+	if c == nil || len(c.webhookURLs) != 1 {
+		t.Fatalf("expected 1 URL, got %v", c)
+	}
+}
+
+func TestSendCardBroadcastsToAllWebhooks(t *testing.T) {
+	t.Parallel()
+	var hit1, hit2 atomic.Int32
+	srv1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		hit1.Add(1)
+		w.WriteHeader(200)
+	}))
+	defer srv1.Close()
+	srv2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		hit2.Add(1)
+		w.WriteHeader(200)
+	}))
+	defer srv2.Close()
+
+	c := NewWithURLs(srv1.URL, srv2.URL)
+	if c == nil {
+		t.Fatal("client should not be nil")
+	}
+	ctx := t.Context()
+	if err := c.SendCard(ctx, map[string]interface{}{"msg_type": "text"}); err != nil {
+		t.Fatalf("SendCard error: %v", err)
+	}
+	if hit1.Load() != 1 || hit2.Load() != 1 {
+		t.Fatalf("expected both webhooks to be called once: hit1=%d hit2=%d", hit1.Load(), hit2.Load())
+	}
+}
+
+func TestSendCardReturnsErrorWhenOneFails(t *testing.T) {
+	t.Parallel()
+	good := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(200)
+	}))
+	defer good.Close()
+
+	c := NewWithURLs(good.URL, "http://127.0.0.1:0")
+	ctx := t.Context()
+	err := c.SendCard(ctx, map[string]interface{}{"msg_type": "text"})
+	if err == nil {
+		t.Fatal("expected error when one webhook fails")
 	}
 }
 

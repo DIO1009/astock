@@ -15,10 +15,12 @@ import (
 
 var cst = time.FixedZone("CST", 8*3600)
 
-// Client sends messages to a Lark (飞书) channel via webhook.
+// Client sends messages to one or more Lark (飞书) webhook bots simultaneously.
+// When multiple webhooks are configured, each message is dispatched to every
+// bot concurrently; a per-bot error is logged but does not block the others.
 type Client struct {
-	webhookURL string
-	httpClient *http.Client
+	webhookURLs []string
+	httpClient  *http.Client
 }
 
 // CloseReportSummary holds account-level figures appended to the daily close report.
@@ -29,40 +31,116 @@ type CloseReportSummary struct {
 	TodayClosePnl float64 // Σ today's closed-trade PnL (absolute)
 }
 
-// New creates a Lark Client. Returns nil when LARK_WEBHOOK_URL is not set or empty.
+// New creates a Lark Client configured from environment variables.
+//
+// Reads webhook URLs from, in order:
+//   - LARK_WEBHOOK_URL  (primary bot)
+//   - LARK_WEBHOOK_URL2 (secondary bot, optional)
+//
+// Returns nil when no URL is configured.
 func New() *Client {
-	url := os.Getenv("LARK_WEBHOOK_URL")
-	if url == "" {
+	var urls []string
+	for _, env := range []string{"LARK_WEBHOOK_URL", "LARK_WEBHOOK_URL2"} {
+		if u := os.Getenv(env); u != "" {
+			urls = append(urls, u)
+		}
+	}
+	if len(urls) == 0 {
 		return nil
 	}
 	return &Client{
-		webhookURL: url,
-		httpClient: &http.Client{Timeout: 10 * time.Second},
+		webhookURLs: urls,
+		httpClient:  &http.Client{Timeout: 10 * time.Second},
 	}
 }
 
-// SendCard POSTs an interactive card message to the webhook.
-// card must be a map representing the Lark card JSON (msg_type + card fields).
-// Returns nil on 2xx; returns error on network failure or non-2xx response.
+// NewWithURLs creates a Client from an explicit list of webhook URLs.
+// Returns nil when urls is empty.
+func NewWithURLs(urls ...string) *Client {
+	var valid []string
+	for _, u := range urls {
+		if u != "" {
+			valid = append(valid, u)
+		}
+	}
+	if len(valid) == 0 {
+		return nil
+	}
+	return &Client{
+		webhookURLs: valid,
+		httpClient:  &http.Client{Timeout: 10 * time.Second},
+	}
+}
+
+// SendCard POSTs an interactive card message to all configured webhooks.
+//
+// Messages are delivered to each bot concurrently. The call blocks until all
+// deliveries complete (or the context is cancelled). If any bot returns an
+// error it is collected and returned as a combined error; the other bots are
+// not affected.
 func (c *Client) SendCard(ctx context.Context, card map[string]interface{}) error {
 	reqBody, err := json.Marshal(card)
 	if err != nil {
 		return fmt.Errorf("lark: marshal card: %w", err)
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.webhookURL, bytes.NewReader(reqBody))
-	if err != nil {
-		return fmt.Errorf("lark: create request: %w", err)
+
+	type result struct {
+		url string
+		err error
 	}
-	req.Header.Set("Content-Type", "application/json")
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("lark: send: %w", err)
+	results := make(chan result, len(c.webhookURLs))
+
+	for _, url := range c.webhookURLs {
+		url := url
+		go func() {
+			req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(reqBody))
+			if err != nil {
+				results <- result{url, fmt.Errorf("lark: create request: %w", err)}
+				return
+			}
+			req.Header.Set("Content-Type", "application/json")
+			resp, err := c.httpClient.Do(req)
+			if err != nil {
+				results <- result{url, fmt.Errorf("lark: send: %w", err)}
+				return
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+				results <- result{url, fmt.Errorf("lark: webhook returned HTTP %d", resp.StatusCode)}
+				return
+			}
+			results <- result{url, nil}
+		}()
 	}
-	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("lark: webhook returned HTTP %d", resp.StatusCode)
+
+	var errs []error
+	for range c.webhookURLs {
+		if r := <-results; r.err != nil {
+			errs = append(errs, r.err)
+		}
 	}
-	return nil
+	if len(errs) == 0 {
+		return nil
+	}
+	if len(errs) == 1 {
+		return errs[0]
+	}
+	msgs := make([]string, 0, len(errs))
+	for _, e := range errs {
+		msgs = append(msgs, e.Error())
+	}
+	return fmt.Errorf("lark: %d webhook(s) failed: %s", len(errs), joinStrings(msgs, "; "))
+}
+
+func joinStrings(ss []string, sep string) string {
+	var b bytes.Buffer
+	for i, s := range ss {
+		if i > 0 {
+			b.WriteString(sep)
+		}
+		b.WriteString(s)
+	}
+	return b.String()
 }
 
 // SendDailyCloseReport formats and sends the daily close report card.

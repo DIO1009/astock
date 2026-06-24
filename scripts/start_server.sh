@@ -37,11 +37,13 @@ fi
 : "${ASTOCK_ROTATION_ENABLED:=0}"
 : "${ASTOCK_EM_MIN_INTERVAL_MS:=1000}"
 : "${ASTOCK_EM_MAX_CONCURRENCY:=2}"
-: "${LARK_WEBHOOK_URL:=https://open.larksuite.com/open-apis/bot/v2/hook/xxx}"
+: "${LARK_WEBHOOK_URL:=}"
+: "${LARK_WEBHOOK_URL2:=}"
 : "${ASTOCK_DB_DSN:=postgres://postgres:dmrxlbol123@127.0.0.1:5432/astock_trade?sslmode=disable}"
 export ASTOCK_LIVE_DATA ASTOCK_TICK_SECONDS ASTOCK_DYNAMIC_SCREENER
 export ASTOCK_TOP_N ASTOCK_MAX_POS ASTOCK_ROTATION_ENABLED ASTOCK_DB_DSN
-export ASTOCK_EM_MIN_INTERVAL_MS ASTOCK_EM_MAX_CONCURRENCY LARK_WEBHOOK_URL
+export ASTOCK_EM_MIN_INTERVAL_MS ASTOCK_EM_MAX_CONCURRENCY
+export LARK_WEBHOOK_URL LARK_WEBHOOK_URL2
 
 echo ""
 echo "▶ 运行模式 (Linux 服务器):"
@@ -69,8 +71,11 @@ case "${ASTOCK_ROTATION_ENABLED}" in
   *) echo "  轮动策略:  已禁用" ;;
 esac
 
-if [[ -n "${LARK_WEBHOOK_URL:-}" ]]; then
-  echo "  Lark 通知:  已配置"
+LARK_COUNT=0
+[[ -n "${LARK_WEBHOOK_URL:-}" ]]  && LARK_COUNT=$((LARK_COUNT+1))
+[[ -n "${LARK_WEBHOOK_URL2:-}" ]] && LARK_COUNT=$((LARK_COUNT+1))
+if [[ "${LARK_COUNT}" -gt 0 ]]; then
+  echo "  Lark 通知:  已配置（${LARK_COUNT} 个 bot）"
 else
   echo "  Lark 通知:  未配置（跳过）"
 fi
