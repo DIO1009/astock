@@ -719,11 +719,11 @@ func main() {
 	}
 
 	// ── Lark 平仓日报调度器 ────────────────────────────────────────────────────
-	// 每个交易日 15:30 CST 通过 Lark webhook 发送当日平仓报告卡片。
+	// 每个交易日 15:10 CST 通过 Lark webhook 发送当日平仓报告卡片。
 	// LARK_WEBHOOK_URL 未设置时静默跳过。开/平仓即时通知见 wrapExecutorWithLark。
 	if larkClient != nil {
 		go runCloseReportScheduler(ctx, perfTracker, posMgr, dataProvider, tradingCal, larkClient)
-		log.Println("[Lark] ✅ 开/平仓即时通知 + 平仓日报已启用（交易日 15:30 CST）")
+		log.Println("[Lark] ✅ 开/平仓即时通知 + 平仓日报已启用（交易日 15:10 CST）")
 	}
 
 	// ── Feature 6.2: 人工控制信号处理 ────────────────────────────────────────
@@ -808,7 +808,7 @@ func main() {
 	printSummary(mon, paperBroker, safetyGuard)
 }
 
-// runCloseReportScheduler 每个交易日 15:30 CST 发送当日平仓日报到 Lark 频道。
+// runCloseReportScheduler 每个交易日 15:10 CST 发送当日平仓日报到 Lark 频道。
 func runCloseReportScheduler(
 	ctx context.Context,
 	perfTracker core.PerformanceTracker,
@@ -830,7 +830,7 @@ func runCloseReportScheduler(
 		case <-time.After(time.Until(next)):
 		}
 
-		// 15:30 触发
+		// 15:10 触发
 		now = time.Now().In(cst)
 		dateStr := now.Format("2006-01-02")
 
@@ -892,11 +892,11 @@ func allHeldQuotesMissing(positions []core.Position, quotes map[string]*core.Quo
 	return len(positions) > 0
 }
 
-// nextCloseReportTime 计算下一个触发时间：当前或下一个交易日 15:30 CST。
+// nextCloseReportTime 计算下一个触发时间：当前或下一个交易日 15:10 CST。
 func nextCloseReportTime(now time.Time, loc *time.Location, cal *calendar.Calendar) time.Time {
-	today := time.Date(now.Year(), now.Month(), now.Day(), 15, 30, 0, 0, loc)
+	today := time.Date(now.Year(), now.Month(), now.Day(), 15, 10, 0, 0, loc)
 
-	// 如果今天尚未到 15:30 且今天是交易日 → 今天 15:30
+	// 如果今天尚未到 15:10 且今天是交易日 → 今天 15:10
 	if now.Before(today) && cal.IsTradeDay(today) {
 		return today
 	}
