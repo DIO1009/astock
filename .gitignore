@@ -16,6 +16,7 @@ paper_data.csv
 real_market_data.csv
 backtest_data.csv
 backups/
+debug_bundle_*/
 bin/
 scripts/pids
 config/server.env
