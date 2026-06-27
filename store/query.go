@@ -60,6 +60,15 @@ type StatusQueryRow struct {
 	AnomalyCount       int     `json:"anomaly_count"`
 }
 
+// TrailStopExit represents a single TRAIL_STOP exit with its entry price.
+type TrailStopExit struct {
+	Symbol     string  `json:"symbol"`
+	ExitTS     int64   `json:"exit_ts"`
+	ExitPrice  float64 `json:"exit_price"`
+	EntryPrice float64 `json:"entry_price"`
+	Reason     string  `json:"reason"`
+}
+
 // ─── Query helpers ────────────────────────────────────────────────────────────
 
 func sinceMs(rangeStr string) int64 {
@@ -213,4 +222,42 @@ func (s *Store) QueryLatestSystemStatus(ctx context.Context) (*StatusQueryRow, e
 		return nil, fmt.Errorf("QueryLatestSystemStatus: %w", err)
 	}
 	return &r, nil
+}
+
+// QueryTrailStopExits returns all TRAIL_STOP SELL executions with their
+// corresponding BUY entry price obtained via lateral subquery.
+func (s *Store) QueryTrailStopExits(ctx context.Context) ([]TrailStopExit, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT
+			e.symbol,
+			e.execution_time,
+			e.price,
+			COALESCE(b.price, 0),
+			e.extra->>'reason'
+		FROM executions e
+		LEFT JOIN LATERAL (
+			SELECT price FROM executions
+			WHERE symbol = e.symbol
+			  AND side = 'BUY'
+			  AND execution_time < e.execution_time
+			ORDER BY execution_time DESC
+			LIMIT 1
+		) b ON true
+		WHERE e.side = 'SELL'
+		  AND e.extra->>'reason' = 'TRAIL_STOP'
+		ORDER BY e.execution_time DESC`)
+	if err != nil {
+		return nil, fmt.Errorf("QueryTrailStopExits: %w", err)
+	}
+	defer rows.Close()
+
+	var out []TrailStopExit
+	for rows.Next() {
+		var r TrailStopExit
+		if err := rows.Scan(&r.Symbol, &r.ExitTS, &r.ExitPrice, &r.EntryPrice, &r.Reason); err != nil {
+			return nil, err
+		}
+		out = append(out, r)
+	}
+	return out, rows.Err()
 }

@@ -19,6 +19,7 @@ const (
 )
 
 type DailyPoint struct {
+	Date   string
 	Close  float64
 	Volume int64
 }
@@ -148,6 +149,7 @@ func parseTencentCloses(body []byte, tencentSymbol string) ([]DailyPoint, error)
 		if len(row) < 3 {
 			continue
 		}
+		date := parseTencentDate(row[0])
 		close, ok := parseTencentFloat(row[2])
 		if !ok || close <= 0 {
 			continue
@@ -156,7 +158,7 @@ func parseTencentCloses(body []byte, tencentSymbol string) ([]DailyPoint, error)
 		if len(row) > 5 {
 			volume = parseTencentInt(row[5])
 		}
-		points = append(points, DailyPoint{Close: close, Volume: volume * 100})
+		points = append(points, DailyPoint{Date: date, Close: close, Volume: volume * 100})
 	}
 	return points, nil
 }
@@ -196,5 +198,14 @@ func parseTencentInt(v interface{}) int64 {
 		return int64(f)
 	default:
 		return 0
+	}
+}
+
+func parseTencentDate(v interface{}) string {
+	switch x := v.(type) {
+	case string:
+		return strings.TrimSpace(x)
+	default:
+		return ""
 	}
 }

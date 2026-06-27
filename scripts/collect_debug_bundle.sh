@@ -268,6 +268,9 @@ if [[ "$INCLUDE_DB" -eq 1 ]] && command -v psql >/dev/null 2>&1; then
       psql -h "$DSN_HOST" -p "$DSN_PORT" -U "$DSN_USER" -d "$DSN_DB" -Atc \
         "COPY (SELECT * FROM daily_reports ORDER BY date DESC LIMIT 14) TO STDOUT WITH CSV HEADER" \
         >"${OUT_DIR}/db/daily_reports_recent.csv" 2>/dev/null || true
+      psql -h "$DSN_HOST" -p "$DSN_PORT" -U "$DSN_USER" -d "$DSN_DB" -Atc \
+        "COPY (SELECT e.symbol, to_char(to_timestamp(e.execution_time / 1000.0) AT TIME ZONE 'Asia/Shanghai', 'YYYY-MM-DD') AS exit_date, e.price AS exit_price, COALESCE(b.price, 0) AS entry_price, e.extra->>'reason' AS reason FROM executions e LEFT JOIN LATERAL (SELECT price FROM executions WHERE symbol = e.symbol AND side = 'BUY' AND execution_time < e.execution_time ORDER BY execution_time DESC LIMIT 1) b ON true WHERE e.side = 'SELL' AND e.extra->>'reason' = 'TRAIL_STOP' ORDER BY e.execution_time DESC) TO STDOUT WITH CSV HEADER" \
+        >"${OUT_DIR}/db/trail_stop_exits.csv" 2>/dev/null || true
     else
       echo "psql connection failed" >"${OUT_DIR}/db/README.txt"
     fi
