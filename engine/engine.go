@@ -12,6 +12,7 @@ import (
 
 	"astock_trade/core"
 	"astock_trade/datacheck"
+	"astock_trade/market/regime"
 	"astock_trade/rotation"
 )
 
@@ -53,6 +54,7 @@ type Engine struct {
 	calendar     core.TradingCalendar
 	dataChecker  *datacheck.Checker
 	rotationPol  *rotation.Policy
+	marketRegime regime.Classifier
 	lastReviewWk int
 	tickCount    int
 
@@ -101,7 +103,8 @@ func New(
 	}
 }
 
-func (e *Engine) SetRotationPolicy(p *rotation.Policy)            { e.rotationPol = p }
+func (e *Engine) SetMarketRegime(c regime.Classifier)              { e.marketRegime = c }
+func (e *Engine) SetRotationPolicy(p *rotation.Policy)             { e.rotationPol = p }
 func (e *Engine) SetCalendar(cal core.TradingCalendar)            { e.calendar = cal }
 func (e *Engine) SetDataChecker(dc *datacheck.Checker)            { e.dataChecker = dc }
 func (e *Engine) SetAdaptiveOptimizer(opt core.AdaptiveOptimizer) { e.adaptiveOpt = opt }
@@ -385,11 +388,16 @@ func (e *Engine) processTick(ctx context.Context) {
 
 	marketAllows := true
 	mktState := core.MarketOscillate
+	if e.marketRegime != nil {
+		mktState = e.marketRegime.Classify(indexQuote)
+	}
 	if e.marketFilter != nil {
-		mktState = e.marketFilter.State(indexQuote)
 		marketAllows = e.marketFilter.AllowOpen(indexQuote)
 	}
 	if setter, ok := e.alphaEng.(interface{ SetMarketState(core.MarketState) }); ok {
+		setter.SetMarketState(mktState)
+	}
+	if setter, ok := e.stabilizer.(interface{ SetMarketState(core.MarketState) }); ok {
 		setter.SetMarketState(mktState)
 	}
 	if marketReporter, ok := e.dashboard.(core.DashboardMarketReporter); ok {

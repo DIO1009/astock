@@ -50,6 +50,7 @@ import (
 	"astock_trade/logger/console"
 	"astock_trade/logger/execution"
 	"astock_trade/logger/filelog"
+	"astock_trade/market/regime"
 	"astock_trade/market/trend"
 	"astock_trade/monitor"
 	"astock_trade/notify/lark"
@@ -618,6 +619,8 @@ func main() {
 		tradeLogger,
 		reviewer,
 	)
+	regimeClassifier := regime.New()
+	eng.SetMarketRegime(regimeClassifier)
 	rotationEnabled := rotationEnabledFromEnv()
 	eng.SetRotationPolicy(rotationPolicyForStartup(rotationEnabled, rotCfg))
 	if rotationEnabled {

@@ -203,6 +203,17 @@ func gatedWeight(name string, weight float64, state core.MarketState) float64 {
 		if name == "reversal" {
 			return weight * 0.5
 		}
+	case core.MarketOscillate:
+		switch name {
+		case "momentum":
+			return weight * 0.67
+		case "reversal":
+			return weight * 1.40
+		case "breakout":
+			return weight * 0.75
+		case "volume":
+			return weight * 1.33
+		}
 	case core.MarketDowntrend:
 		if name == "momentum" {
 			return weight * 0.5

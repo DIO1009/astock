@@ -30,9 +30,10 @@ type Config struct {
 
 // Stabilizer satisfies core.SignalStabilizer.
 type Stabilizer struct {
-	mu     sync.Mutex
-	counts map[string]int // symbol → current consecutive-in-TopN count
-	cfg    Config
+	mu          sync.Mutex
+	counts      map[string]int // symbol → current consecutive-in-TopN count
+	cfg         Config
+	marketState core.MarketState
 }
 
 // New returns a Stabilizer. Defaults: MinConsecutive=3, TopN=3.
@@ -44,9 +45,19 @@ func New(cfg Config) *Stabilizer {
 		cfg.TopN = 3
 	}
 	return &Stabilizer{
-		counts: make(map[string]int),
-		cfg:    cfg,
+		counts:      make(map[string]int),
+		cfg:         cfg,
+		marketState: core.MarketOscillate,
 	}
+}
+
+// SetMarketState injects the current market regime for entry confirmation
+// adjustment. In OSCILLATE, the effective MinConsecutive is raised by 1
+// to require stricter consecutive-tick confirmation before buying.
+func (s *Stabilizer) SetMarketState(state core.MarketState) {
+	s.mu.Lock()
+	s.marketState = state
+	s.mu.Unlock()
 }
 
 // Stabilize updates internal consecutive counts from the current tick's ranked
@@ -87,9 +98,13 @@ func (s *Stabilizer) Stabilize(signals []core.Signal) ([]core.Signal, map[string
 	}
 
 	// ── Promote stable symbols ────────────────────────────────────────────────
+	effectiveMin := s.cfg.MinConsecutive
+	if s.marketState == core.MarketOscillate {
+		effectiveMin = s.cfg.MinConsecutive + 1
+	}
 	stable := make([]core.Signal, 0, len(signals))
 	for _, sig := range signals {
-		if s.counts[sig.Symbol] >= s.cfg.MinConsecutive {
+		if s.counts[sig.Symbol] >= effectiveMin {
 			stable = append(stable, sig)
 		}
 	}

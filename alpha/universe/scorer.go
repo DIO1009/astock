@@ -21,6 +21,7 @@ const (
 	wVolumeRatio = 0.30
 	wTurnover    = 0.10
 	wChangeP     = 0.05
+	wPE          = 0.10
 )
 
 // Layer 1 – hard filter thresholds (applied before scoring).
@@ -124,6 +125,12 @@ func layer1Filter(stocks []StockInfo, opt FilterOpts) []StockInfo {
 		if opt.RequireVolume && s.Volume == 0 {
 			continue
 		}
+		// ── PE filter ────────────────────────────────────────────────────
+		// Exclude stocks with zero or negative PE (loss-making / unprofitable)
+		// since 1/PE cannot be computed for the earnings-yield factor.
+		if s.PE <= 0 {
+			continue
+		}
 		out = append(out, s)
 	}
 	return out
@@ -179,6 +186,13 @@ func computeScores(stocks []StockInfo) []ScoredStock {
 	zTO := zScore(to)
 	zCP := zScore(cp)
 
+	// Earnings yield = 1/PE; PE > 0 guaranteed by layer1Filter.
+	ey := make([]float64, n)
+	for i, s := range stocks {
+		ey[i] = 1.0 / s.PE
+	}
+	zEY := zScore(ey)
+
 	out := make([]ScoredStock, n)
 	for i, s := range stocks {
 		out[i] = ScoredStock{
@@ -187,7 +201,8 @@ func computeScores(stocks []StockInfo) []ScoredStock {
 				wRet20d*zRet20d[i] +
 				wVolumeRatio*zVR[i] +
 				wTurnover*zTO[i] +
-				wChangeP*zCP[i],
+				wChangeP*zCP[i] +
+				wPE*zEY[i],
 		}
 	}
 	return out
