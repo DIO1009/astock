@@ -330,10 +330,10 @@ func (e *Engine) processTick(ctx context.Context) {
 				holdTicks = e.execCtrl.GetHoldTicks(pos.Symbol)
 			}
 			trade := e.executeOrder(core.Order{Symbol: pos.Symbol, Side: "SELL", Price: q.Bid1, Quantity: pos.SellableQty, Reason: "FORCE_LIQUIDATE"}, stockQuotes)
-			if e.execCtrl != nil {
-				e.execCtrl.RecordSell(pos.Symbol, q.Price, "STOP_LOSS")
-			}
 			if trade != nil {
+				if e.execCtrl != nil {
+					e.execCtrl.RecordSell(pos.Symbol, q.Price, "STOP_LOSS")
+				}
 				pnlPct := (trade.Price - pos.AvgPrice) / pos.AvgPrice * 100
 				if e.perfTracker != nil {
 					e.perfTracker.OnSell(trade, pos.AvgPrice, holdTicks, pos.BuyPrice, pos.OpenTime, "STOP_LOSS")
@@ -364,16 +364,19 @@ func (e *Engine) processTick(ctx context.Context) {
 		if e.execCtrl != nil && !e.execCtrl.AllowSell(sym, exitType) {
 			continue
 		}
+		if q.Bid1 <= 0 {
+			continue
+		}
 		holdTicks := 0
 		if e.execCtrl != nil {
 			holdTicks = e.execCtrl.GetHoldTicks(sym)
 		}
 		pnlPct := (q.Price - pos.AvgPrice) / pos.AvgPrice * 100
 		trade := e.executeOrder(core.Order{Symbol: sym, Side: "SELL", Price: q.Bid1, Quantity: pos.SellableQty, Reason: fmt.Sprintf("%-12s avg=%8.4f now=%8.4f pnl=%+.2f%%", exitType, pos.AvgPrice, q.Price, pnlPct)}, stockQuotes)
-		if e.execCtrl != nil {
-			e.execCtrl.RecordSell(sym, q.Price, exitType)
-		}
 		if trade != nil {
+			if e.execCtrl != nil {
+				e.execCtrl.RecordSell(sym, q.Price, exitType)
+			}
 			if e.perfTracker != nil {
 				e.perfTracker.OnSell(trade, pos.AvgPrice, holdTicks, pos.BuyPrice, pos.OpenTime, exitType)
 			}
