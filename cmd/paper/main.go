@@ -195,9 +195,9 @@ func main() {
 	// ── 盈利管理（需要在 posMgr 之前创建，持仓加载需要它）────────────────────
 	posMgr := position.New(position.Config{
 		StopLossPct:   0.07,
-		TakeProfitPct: 0.10,
-		TrailStart:    0.04,
-		TrailDrop:     0.02,
+		TakeProfitPct: 0.12,
+		TrailStart:    0.07,
+		TrailDrop:     0.03,
 	})
 
 	// ── 交易日历（提前初始化，LoadState 需要今日序号做 T+1 reconcile）──────────
