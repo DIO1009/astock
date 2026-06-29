@@ -104,6 +104,11 @@ func (d *Decision) Decide(
 			continue
 		}
 
+		// Skip stocks that have dropped 5% or more today — avoid buying into sharp intraday selloffs.
+		if q.PctChg <= -5.0 {
+			continue
+		}
+
 		rawQty := int(alloc / (q.Ask1 * (1 + d.cfg.CostFactor)))
 		qty := rawQty / 100 * 100
 		if qty <= 0 {
